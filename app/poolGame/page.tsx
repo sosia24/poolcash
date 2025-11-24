@@ -90,7 +90,6 @@ export default function App() {
     const { t } = useLanguage();
     const router = useRouter();
 
-    const vinhetaRef = useRef<HTMLVideoElement | null>(null);
     const [sharesBought, setSharesBought] = useState(0);
     const [inputQuantity, setInputQuantity] = useState(1);
     const [inputValue, setInputValue] = useState(String(1));
