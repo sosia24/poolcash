@@ -1,0 +1,640 @@
+"use client";
+
+import { useEffect, useState, useRef, useMemo, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+    getUserTickIds,
+    getTickDatas,
+    buyMpoolCash,
+    approveUSDTCash,
+    getActualPoints,
+    claimMPoolCash,
+    reinvestMPoolCash,
+    hasPositionClaimed,
+} from "@/services/Web3Services";
+import { useWallet } from "@/services/walletContext";
+import { TickProgressBar } from "@/components/tickProgessBar";
+import AnimatedBackground from "@/components/AnimatedBackground";
+import { ExternalLink, Loader2, TrendingUp, DollarSign } from "lucide-react"; // Novos ícones
+import { useRouter } from "next/navigation";
+import { useLanguage } from "@/components/LanguageManager";
+import Decimal from "decimal.js";
+import Image from "next/image";
+Decimal.set({ precision: 10 });
+
+// === TIPOS (Interfaces) ===
+function tickToPrice(tick: number): Decimal {
+    const base = new Decimal(1.0001);
+    return base.pow(tick);
+}
+
+type ModalState = {
+    isOpen: boolean;
+    step: "approve" | "buy" | "success" | "error";
+    status: "idle" | "pending" | "success" | "error";
+    message: string;
+};
+
+interface TickData {
+    currentTick: number;
+    upperTick: number;
+    startTick: number;
+}
+
+interface UserPosition {
+    id: number;
+    data: TickData | null;
+    amountInvested: number;
+    unrealizedProfit: number;
+    currentValue: number;
+}
+
+interface PoolMetrics {
+    totalValueLocked: number;
+    dailyVolumeUSD: number;
+    apy: number;
+}
+
+// === COMPONENTE VISUAL NOVO: Pool Status Card ===
+const PoolStatusCard = ({ metrics, sharesBought, shareValue }: { metrics: PoolMetrics; sharesBought: number; shareValue: number }) => {
+    return (
+        <div className="w-full max-w-[360px] lg:max-w-full rounded-2xl border border-green-600/30 bg-gradient-to-b from-black/10 to-black/30 p-4 shadow-[0_10px_30px_rgba(0,255,120,0.06)]">
+            <h3 className="text-xl font-bold text-green-300 mb-4 border-b border-gray-700/50 pb-2 flex items-center gap-2">
+                <DollarSign className="w-5 h-5" /> Pool Metrics
+            </h3>
+            
+            <div className="flex justify-between items-center mb-4">
+                <div className="text-center flex-1 p-3 bg-black/40 rounded-lg border border-green-700/20">
+                    <div className="text-sm text-gray-300">Total Pool Value</div>
+                    <div className="text-2xl font-bold text-yellow-400">${metrics.totalValueLocked.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                </div>
+                
+            </div>
+
+
+
+            <div className="mt-6 pt-4 border-t border-gray-700/50 flex justify-between">
+                <div className="text-left">
+                    <div className="text-sm text-gray-300">Your Shares</div>
+                    <div className="text-xl font-bold text-white">{sharesBought}</div>
+                </div>
+            </div>
+        </div>
+    );
+};
+// === COMPONENTE PRINCIPAL ===
+
+export default function App() {
+    const shareValue = 10; // Mantendo o valor da share, mas removendo o limite inicial
+    const { address, setAddress } = useWallet();
+    const { t } = useLanguage();
+    const router = useRouter();
+
+    // --- Estados da Aplicação ---
+    const [showIntroOverlay, setShowIntroOverlay] = useState(true);
+    const vinhetaRef = useRef<HTMLVideoElement | null>(null);
+    const [sharesBought, setSharesBought] = useState(0);
+    const [inputQuantity, setInputQuantity] = useState(1);
+    const [inputValue, setInputValue] = useState(String(1));
+    const [loading, setLoading] = useState(false);
+    const [loadingClaim, setLoadingClaim] = useState(false);
+    const [loadingReinvest, setLoadingReinvest] = useState(false);
+    const [message, setMessage] = useState("");
+
+    const [modal, setModal] = useState<ModalState>({
+        isOpen: false,
+        step: "approve",
+        status: "idle",
+        message: "",
+    });
+
+    const [userPositions, setUserPositions] = useState<UserPosition[]>([]);
+    const [isPositionsLoading, setIsPositionsLoading] = useState(true);
+    const [positionsClaimedMap, setPositionsClaimedMap] = useState<{
+        [id: number]: boolean;
+    }>({});
+    
+    // Novo estado para as métricas da Pool
+    const [poolMetrics, setPoolMetrics] = useState<PoolMetrics>({
+        totalValueLocked: 0,
+        dailyVolumeUSD: 0,
+        apy: 0,
+    });
+
+    // --- Funções de Busca Web3 (useCallback) ---
+
+    const fetchPoolData = useCallback(async () => {
+        try {
+            // 1. Fetch Shares Bought (sua participação)
+            const newShares = (await getActualPoints()); 
+            setPoolMetrics(prevMetrics => ({
+                ...prevMetrics,
+                totalValueLocked : newShares,
+            }))
+            setSharesBought(newShares/10);
+            
+
+        } catch (error) {
+            console.error("Failed to fetch pool data:", error);
+        }
+    }, []);
+
+    const switchAccount = async () => {
+        if (window.ethereum) {
+            try {
+                await window.ethereum.request({
+                    method: "wallet_requestPermissions",
+                    params: [{ eth_accounts: {} }],
+                });
+
+                const accounts = await window.ethereum.request({
+                    method: "eth_accounts",
+                });
+                
+                // Melhoria UX: Atualiza o endereço e refaz o fetch, sem recarregar a página
+                setAddress(accounts[0]);
+                fetchPoolData();
+                if (accounts[0]) fetchUserPositions(accounts[0]);
+
+            } catch (error) {
+                console.error("Erro ao trocar de conta:", error);
+            }
+        }
+    };
+
+    const fetchUserPositions = useCallback(async (address: string) => {
+        if (!address) return;
+        setIsPositionsLoading(true);
+        try {
+            const ids = await getUserTickIds(address);
+
+            const positionPromises = ids.map(async (id) => {
+                const data = await getTickDatas(id);
+                return {
+                    id,
+                    data,
+                } as UserPosition;
+            });
+
+            const results = await Promise.allSettled(positionPromises);
+
+            const positions = results
+                .filter((result) => result.status === "fulfilled")
+                .map((result) => (result as PromiseFulfilledResult<UserPosition>).value)
+                .reverse();
+
+            setUserPositions(positions);
+        } catch (err) {
+            console.error("Failed to load your positions.", err);
+        } finally {
+            setIsPositionsLoading(false);
+        }
+    }, []);
+
+    // --- Efeitos (Autoplay, Busca de Dados, Claims) ---
+
+    useEffect(() => {
+        // Lógica da vinheta (mantida)
+        let mounted = true;
+        const tryAutoplay = async () => {
+            await new Promise((r) => setTimeout(r, 50));
+            const v = vinhetaRef.current;
+            if (!v || !mounted) {
+                setShowIntroOverlay(false);
+                return;
+            }
+            try {
+                await v.play();
+                if (!mounted) return;
+                setShowIntroOverlay(true);
+            } catch (err) {
+                console.warn("Vinheta autoplay blocked — skipping intro:", err);
+                setShowIntroOverlay(false);
+            }
+        };
+        tryAutoplay();
+        const t = setTimeout(() => {
+            if (mounted) setShowIntroOverlay(false);
+        }, 20000);
+
+        return () => {
+            mounted = false;
+            clearTimeout(t);
+        };
+    }, []);
+
+    useEffect(() => {
+        fetchPoolData();
+        if (address) fetchUserPositions(address);
+
+        const interval = setInterval(() => {
+            fetchPoolData();
+            if (address) fetchUserPositions(address);
+        }, 15000);
+
+        return () => clearInterval(interval);
+    }, [address, fetchPoolData, fetchUserPositions]);
+    
+    useEffect(() => {
+        if (!userPositions || userPositions.length === 0) return;
+
+        const fetchClaims = async () => {
+            const newMap: { [id: number]: boolean } = {};
+            // ... (lógica de fetchClaims mantida)
+            for (const pos of userPositions) {
+                try {
+                    const claimed = await hasPositionClaimed(pos.id);
+                    newMap[pos.id] = claimed;
+                } catch (err) {
+                    console.error(`Erro ao verificar claim para ID ${pos.id}:`, err);
+                    newMap[pos.id] = false;
+                }
+            }
+            setPositionsClaimedMap(newMap);
+        };
+
+        fetchClaims();
+    }, [userPositions]);
+
+    // --- Funções de Ação (Aprovar/Comprar) ---
+
+    const handleApprove = async () => {
+        const valueToApprove = inputQuantity * shareValue;
+        setLoading(true);
+        // ... (lógica de modal e chamada approveUSDTCash mantida)
+        setModal({
+            isOpen: true,
+            step: "approve",
+            status: "pending",
+            message: `Waiting for transaction approval for ${valueToApprove} USDT in your wallet...`,
+        });
+
+        try {
+            const tx = await approveUSDTCash(valueToApprove);
+            await tx.wait(); 
+            setModal({
+                isOpen: true,
+                step: "approve",
+                status: "success",
+                message: `USDT approved successfully (${valueToApprove} USDT). You can proceed with the purchase.`,
+            });
+        } catch (err) {
+            console.error("Error approving USDT:", err);
+            setModal({
+                isOpen: true,
+                step: "approve",
+                status: "error",
+                message: "Failed to approve USDT. Check console or try again.",
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleBuy = async () => {
+        setLoading(true);
+        // ... (lógica de modal e chamada buyMpoolCash mantida)
+        setModal((prev) => ({
+            ...prev,
+            step: "buy",
+            status: "pending",
+            message: "Processing your purchase...",
+        }));
+        try {
+            const tx = await buyMpoolCash(inputQuantity);
+            await tx.wait();
+
+            await fetchPoolData();
+            if (address) await fetchUserPositions(address);
+
+            setModal({
+                isOpen: true,
+                step: "success",
+                status: "success",
+                message: "Purchase confirmed! Position added successfully.",
+            });
+        } catch (err) {
+            console.error("Error during purchase:", err);
+            setModal((prev) => ({
+                ...prev,
+                status: "error",
+                message: "Error during purchase. Please try again.",
+            }));
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const closeModal = () => setModal({ ...modal, isOpen: false });
+    
+    // --- Lógica de Renderização do Input (Ajustado sem maxAvailable) ---
+    
+    // Função para tratar o input, garantindo que seja um número > 0
+    const handleInputBlur = () => {
+        let parsed = parseInt(inputValue || "0", 10);
+        if (isNaN(parsed) || parsed < 1) parsed = 1;
+        
+        // Não há mais limite de maxAvailable, apenas garantimos que seja > 0
+        setInputQuantity(parsed);
+        setInputValue(String(parsed));
+    };
+
+    return (
+        <div className="relative min-h-screen w-full bg-black text-white overflow-x-hidden font-sans">
+            {/* Animated background (particles) */}
+            <div className="absolute inset-0 z-0">
+                <AnimatedBackground />
+                <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+            </div>
+
+            {/* Top bar */}
+            <header className="relative z-20 flex items-center justify-between px-4 sm:px-6 py-4 max-w-[1400px] mx-auto">
+                {/* LOGO E TÍTULO (Mantido) */}
+                <div className="flex items-center gap-2 sm:gap-4">
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full p-2 bg-black/60 flex items-center justify-center ring-2 ring-green-400/40 shadow-[0_0_15px_#00ff80]">
+                        <Image src="/Pool-Cash-Logo.svg" className="mt-[4px]" alt="logo" width={44} height={44} />
+                    </div>
+                    <div>
+                        <h1 className="text-xl sm:text-2xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-yellow-300">
+                            MpoolCash
+                        </h1>
+                        <p className="text-xs text-gray-300 hidden sm:block">Liquidity Pool · Neon Edition</p>
+                    </div>
+                </div>
+
+                {/* CONEXÃO / HOME (Mantido) */}
+                <div className="flex items-center gap-3">
+                    <button onClick={() => router.push("/")} className="text-sm cursor-pointer text-yellow-400 hover:text-yellow-300 transition-colors hidden sm:block">
+                        Home
+                    </button>
+                    {address ? (
+                        <div className="px-3 py-2 rounded-md bg-black/50 border border-green-700/30 transition-shadow hover:shadow-[0_0_10px_rgba(0,255,120,0.3)] cursor-pointer" onClick={switchAccount}>
+                            <div className="text-xs text-gray-300 hidden sm:block">{t.changeWallet?.connectedAs || "Connected as"}</div>
+                            <div className="text-sm text-yellow-400 font-mono">
+                                {address.slice(0, 4)}...{address.slice(-4)}
+                            </div>
+                        </div>
+                    ) : (
+                        <button onClick={() => { /* Lógica de Conexão */ }} className="px-4 py-2 rounded-md bg-green-500 text-black font-semibold hover:bg-green-400 transition-colors">
+                            Connect
+                        </button>
+                    )}
+                </div>
+            </header>
+
+            {/* Main content */}
+            <main className="relative z-10 max-w-[1400px] mx-auto px-4 sm:px-6 py-8 sm:py-10 grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Left column: Pool Status Card + controls */}
+                <section className="lg:col-span-1 flex flex-col items-center lg:items-start gap-6 order-2 lg:order-1">
+                    
+                    {/* NOVO: Pool Status Card */}
+                    <PoolStatusCard 
+                        metrics={poolMetrics} 
+                        sharesBought={sharesBought} 
+                        shareValue={shareValue} 
+                    />
+
+                    {/* Compact controls - Coluna de Compra (Ajustada) */}
+                    <div className="w-full max-w-[360px] lg:max-w-full p-4 rounded-2xl bg-white/3 border border-green-700/20 order-1 lg:order-2">
+                        <h3 className="text-lg font-bold text-white mb-4 border-b border-gray-700/50 pb-2">Buy Shares</h3>
+                        
+                        <div className="flex items-end gap-3 flex-wrap sm:flex-nowrap">
+                            <div className="flex-1 min-w-[120px]">
+                                <label htmlFor="quantity" className="text-sm text-gray-300 block mb-1">Quantity</label>
+                                <input
+                                    id="quantity"
+                                    type="number"
+                                    inputMode="numeric"
+                                    value={inputValue}
+                                    onChange={(e) => {
+                                        const cleaned = e.target.value.replace(/[^\d]/g, "");
+                                        setInputValue(cleaned);
+                                    }}
+                                    onBlur={handleInputBlur}
+                                    min="1"
+                                    className="w-full py-2 px-3 rounded-md bg-black/60 border border-green-600/40 text-green-200 text-center text-xl font-mono focus:ring-2 focus:ring-green-400 transition-colors"
+                                />
+                            </div>
+
+                            <div className="text-right flex-1 min-w-[120px] pt-4">
+                                <div className="text-xs text-gray-400">
+                                    Total Cost: <span className="text-yellow-300 font-bold">${((parseInt(inputValue || "0", 10) || 0) * shareValue).toFixed(2)}</span>
+                                </div>
+                                
+                                {/* Botão de Ação (Ajustado) */}
+                                <button
+                                    onClick={handleApprove}
+                                    disabled={loading || parseInt(inputValue || "0", 10) < 1 || !address}
+                                    className={`mt-2 w-full cursor-pointer py-3 rounded-lg font-bold transition-all duration-200 
+                                        ${loading || parseInt(inputValue || "0", 10) < 1 || !address ? "bg-gray-700 text-gray-400 cursor-not-allowed" : "bg-gradient-to-r from-green-600 to-emerald-600 text-black hover:from-green-500 hover:to-emerald-500"}`}
+                                >
+                                    {address ? (loading ? <Loader2 className="animate-spin w-5 h-5 inline mr-2" /> : "Approve & Order") : "Connect Wallet"}
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="mt-3 text-xs text-gray-400">
+                            Buy as many shares as you like. There is no pool limit!
+                        </div>
+                    </div>
+                </section>
+
+                {/* Middle & Right: positions and details (Mantido) */}
+                <section className="lg:col-span-2 flex flex-col gap-6 order-1 lg:order-2">
+                    {/* Seção de Posições (Mantida) */}
+                    <div className="p-4 sm:p-6 rounded-2xl bg-white/3 border border-green-800/20 shadow-[0_10px_40px_rgba(0,255,120,0.04)]">
+                        {/* ... (Conteúdo de Posições mantido) ... */}
+                        <div className="flex items-center justify-between mb-4 border-b border-gray-700/50 pb-2">
+                            <h2 className="text-xl font-bold text-green-300">Your Active Positions</h2>
+                            <a href={`https://revert.finance/#/account/0x9A41CeF567e7aCb6cfFcdB518cE1280e596C48aC`} target="_blank" rel="noreferrer" className="text-sm text-yellow-300 hover:text-yellow-200 transition-colors flex items-center gap-1">
+                                View External <ExternalLink className="w-4 h-4" />
+                            </a>
+                        </div>
+
+                        {isPositionsLoading ? (
+                            <div className="text-gray-400 flex items-center gap-2 mt-4">
+                                <Loader2 className="animate-spin w-5 h-5" /> Loading your positions...
+                            </div>
+                        ) : userPositions.length > 0 ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                                {userPositions.map((position) => {
+    const isDisabled = positionsClaimedMap[position.id] === true;
+
+    // A CORREÇÃO ESTÁ AQUI: Cálculo como variável simples, não um Hook.
+    let progressPercentage = 0;
+    if (position.data) {
+        const start = position.data.startTick;
+        const current = position.data.currentTick;
+        const upper = position.data.upperTick;
+
+        if (upper === start) {
+            progressPercentage = current >= upper ? 100 : 0;
+        } else {
+            const raw = ((current - start) / (upper - start)) * 100;
+            progressPercentage = Math.max(0, Math.min(100, raw));
+        }
+    }
+    // FIM DA CORREÇÃO
+    
+    const isReadyForAction = position.data && position.data.currentTick >= position.data.upperTick;
+
+    const startPrice = position.data ? tickToPrice(position.data.startTick).mul(new Decimal(10).pow(12)).toFixed(6) : "N/A";
+    const targetPrice = position.data ? tickToPrice(position.data.upperTick).mul(new Decimal(10).pow(12)).toFixed(6) : "N/A";
+    
+    return (
+        <div key={position.id} className="p-4 rounded-xl bg-black/50 border border-green-700/20 transition-all hover:border-green-600/50">
+            <div className="flex items-center justify-between mb-3 border-b border-gray-700/30 pb-2">
+                {/* ... (restante do código) ... */}
+                <div>
+                    <div className="text-sm text-gray-400">Position ID</div>
+                    <div className="text-xl font-bold text-white">#{position.id}</div>
+                </div>
+            </div>
+
+            {position.data ? (
+                <>
+                    <div className="text-xs text-gray-400 my-3">
+                        <div className="flex justify-between mb-1">
+                            <div>Start Price: <span className="text-green-300 font-semibold">{startPrice}</span></div>
+                            <div>Target Price: <span className="text-green-300 font-semibold">{targetPrice}</span></div>
+                        </div>
+                    </div>
+
+                    <div className="mb-3">
+                        <TickProgressBar progressPercentage={progressPercentage} />
+                    </div>
+                    
+                    {isReadyForAction && (
+                        <div className={`mt-4 p-3 rounded-lg ${isDisabled ? "bg-gray-800" : "bg-green-900/40 border border-green-600/30"}`}>
+                            <p className={`text-sm font-semibold mb-3 ${isDisabled ? "text-gray-400" : "text-green-300"}`}>
+                                {isDisabled ? "Rewards Already Claimed." : "Position Ready: Claim or Reinvest Rewards!"}
+                            </p>
+                            
+                            <div className="flex flex-wrap gap-3">
+                                {/* Botão Claim */}
+                                <motion.button
+                                    whileHover={{ scale: isDisabled ? 1 : 1.05 }}
+                                    whileTap={{ scale: isDisabled ? 1 : 0.95 }}
+                                    onClick={async () => {
+                                        setLoadingClaim(true);
+                                        setMessage("");
+                                        try {
+                                            const tx = await claimMPoolCash(position.id);
+                                            setMessage("✅ Reward claimed successfully! Waiting for TX confirmation...");
+                                            await tx.wait();
+                                            setMessage("✅ Reward claimed successfully!");
+                                            if(address) await fetchUserPositions(address);
+                                        } catch (error) {
+                                            console.error(error);
+                                            setMessage("❌ Error claiming reward. See console.");
+                                        } finally {
+                                            setLoadingClaim(false);
+                                        }
+                                    }}
+                                    disabled={loadingClaim || loadingReinvest || isDisabled}
+                                    className={`px-4 py-2 rounded-md font-semibold text-black transition-all ${loadingClaim || loadingReinvest || isDisabled ? "bg-gray-600 text-gray-400 cursor-not-allowed" : "bg-yellow-500 hover:bg-yellow-400"}`}
+                                >
+                                    {loadingClaim ? <Loader2 className="animate-spin w-4 h-4 inline mr-2" /> : "Claim"}
+                                </motion.button>
+
+                                {/* Botão Reinvest */}
+                                <motion.button
+                                    whileHover={{ scale: isDisabled ? 1 : 1.05 }}
+                                    whileTap={{ scale: isDisabled ? 1 : 0.95 }}
+                                    onClick={async () => {
+                                        setLoadingReinvest(true);
+                                        setMessage("");
+                                        try {
+                                            const tx = await reinvestMPoolCash(position.id);
+                                            setMessage("🔁 Reinvestment initiated! Waiting for TX confirmation...");
+                                            await tx.wait();
+                                            setMessage("🔁 Reinvestment completed successfully!");
+                                            if(address) await fetchUserPositions(address);
+                                        } catch (error) {
+                                            console.error(error);
+                                            setMessage("❌ Error reinvesting. See console.");
+                                        } finally {
+                                            setLoadingReinvest(false);
+                                        }
+                                    }}
+                                    disabled={loadingClaim || loadingReinvest || isDisabled}
+                                    className={`px-4 py-2 rounded-md font-semibold transition-all ${loadingClaim || loadingReinvest || isDisabled ? "bg-gray-600 text-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-500 text-white"}`}
+                                >
+                                    {loadingReinvest ? <Loader2 className="animate-spin w-4 h-4 inline mr-2" /> : "Reinvest"}
+                                </motion.button>
+                                
+                                <a href={`https://app.uniswap.org/positions/v3/polygon/${position.id}`} target="_blank" rel="noreferrer" className="ml-auto text-sm text-yellow-300 hover:text-yellow-200 transition-colors flex items-center gap-1 self-center">
+                                    View on Uniswap
+                                </a>
+                            </div>
+                        </div>
+                    )}
+                    {message ? <div className="mt-3 text-sm text-green-300 font-mono break-words">{message}</div> : null}
+                </>
+            ) : (
+                <p className="text-sm text-gray-400 mt-2">Tick data not available. Position might be closed.</p>
+            )}
+        </div>
+    );
+})}
+                            </div>
+                        ) : (
+                            <p className="text-gray-400 mt-4">You have no active positions. Buy a share above to get started.</p>
+                        )}
+                    </div>
+
+                    {/* Extra info row (Ajustado) */}
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    
+                        <div className="p-4 rounded-lg bg-black/40 border border-green-700/20 text-center">
+                            <div className="text-xs text-gray-400">Active Positions</div>
+                            <div className="text-lg font-bold text-white">{userPositions.length}</div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+
+            {/* Modal (Mantido) */}
+            <AnimatePresence>
+                {modal.isOpen && (
+                    <motion.div className="fixed inset-0 flex items-center justify-center bg-black/80 backdrop-blur-sm z-50 p-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                        <motion.div className="relative bg-gray-900 border border-green-700/30 rounded-xl p-8 w-full max-w-md text-center shadow-2xl" initial={{ scale: 0.8 }} animate={{ scale: 1 }} exit={{ scale: 0.8 }}>
+                            {/* Close button */}
+                            <button onClick={closeModal} aria-label="Close modal" className="absolute top-3 right-3 p-1 rounded-full text-gray-300 hover:text-white cursor-pointer transition-colors">
+                                ✕
+                            </button>
+                            <h3 className={`text-2xl font-bold mb-4 ${modal.status === "error" ? "text-red-500" : "text-green-400"}`}>
+                                {modal.status === "pending" ? "Processing..." : modal.status === "success" ? "Success!" : "Error"}
+                            </h3>
+                            <p className="text-gray-300 mb-6 text-sm">{modal.message}</p>
+
+                            {modal.status === "success" && modal.step === "approve" && (
+                                <motion.button
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={handleBuy}
+                                    disabled={loading || inputQuantity < 1}
+                                    className={`w-full py-3 rounded-md font-bold bg-green-400 text-gray-900 hover:bg-green-300 transition-colors cursor-pointer ${loading || inputQuantity < 1 ? "opacity-60 cursor-not-allowed" : ""}`}
+                                >
+                                    BUY {inputQuantity} SHARE(S)
+                                </motion.button>
+                            )}
+
+                            {modal.status === "success" && (modal.step === "success" || modal.step === "buy") && (
+                                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={closeModal} className="w-full py-3 rounded-md font-bold bg-green-500 text-black hover:bg-green-400 transition cursor-pointer">
+                                    DONE
+                                </motion.button>
+                            )}
+
+                            {modal.status === "error" && (
+                                <button onClick={closeModal} className="w-full py-3 rounded-md font-bold bg-red-600 text-white hover:bg-red-500 transition cursor-pointer">
+                                    CLOSE
+                                </button>
+                            )}
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
+    );
+}
