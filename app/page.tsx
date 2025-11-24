@@ -76,7 +76,7 @@ export default function Home() {
                 {!address ? (
                     <button
                         onClick={handleLogin}
-                        className="mt-10 py-3 px-10 text-black font-bold text-xl rounded-full
+                        className="mt-10 py-3 px-10 cursor-pointer text-black font-bold text-xl rounded-full
                                    bg-gradient-to-r from-green-400 to-yellow-300
                                    hover:from-green-500 hover:to-yellow-400
                                    transition-all shadow-[0_0_20px_#00ff75]"
