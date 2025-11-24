@@ -65,14 +65,14 @@ export default function Home() {
                     bg-gradient-to-r from-green-400 via-yellow-300 to-green-500 
                     bg-clip-text text-transparent drop-shadow-[0_0_20px_#00ff75]"
                 >
-                    Bem-vindo ao PoolCash
+                    Welcome to PoolCash
                 </h1>
 
                 <p className="mt-4 max-w-[500px] text-gray-300 text-lg md:text-xl">
-                    O futuro dos jogos Web3 com recompensas reais.
+                    The future of Web3 gaming with real rewards.
                 </p>
 
-                {/* BOTÃO ÚNICO */}
+                {/* SINGLE BUTTON */}
                 {!address ? (
                     <button
                         onClick={handleLogin}
@@ -81,7 +81,7 @@ export default function Home() {
                                    hover:from-green-500 hover:to-yellow-400
                                    transition-all shadow-[0_0_20px_#00ff75]"
                     >
-                        {loading ? "Conectando..." : "Conectar Wallet"}
+                        {loading ? "Connecting..." : "Connect Wallet"}
                     </button>
                 ) : canAccessGame ? (
                     <a
@@ -91,14 +91,14 @@ export default function Home() {
                                    hover:from-green-500 hover:to-yellow-400
                                    transition-all shadow-[0_0_20px_#00ff75]"
                     >
-                        Entrar no PoolGame
+                        Enter PoolGame
                     </a>
                 ) : (
                     <button
                         className="mt-10 py-3 px-10 text-black font-bold text-xl rounded-full
                                    bg-gray-600 opacity-50 cursor-not-allowed"
                     >
-                        Complete o Registro
+                        Complete the Registration
                     </button>
                 )}
 
