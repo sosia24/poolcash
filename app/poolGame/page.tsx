@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, useMemo, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     getUserTickIds,
@@ -15,7 +15,7 @@ import {
 import { useWallet } from "@/services/walletContext";
 import { TickProgressBar } from "@/components/tickProgessBar";
 import AnimatedBackground from "@/components/AnimatedBackground";
-import { ExternalLink, Loader2, TrendingUp, DollarSign } from "lucide-react"; // Novos ícones
+import { ExternalLink, Loader2, DollarSign } from "lucide-react"; // Novos ícones
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/components/LanguageManager";
 import Decimal from "decimal.js";
@@ -56,7 +56,7 @@ interface PoolMetrics {
 }
 
 // === COMPONENTE VISUAL NOVO: Pool Status Card ===
-const PoolStatusCard = ({ metrics, sharesBought, shareValue }: { metrics: PoolMetrics; sharesBought: number; shareValue: number }) => {
+const PoolStatusCard = ({ metrics, sharesBought }: { metrics: PoolMetrics; sharesBought: number;}) => {
     return (
         <div className="w-full max-w-[360px] lg:max-w-full rounded-2xl border border-green-600/30 bg-gradient-to-b from-black/10 to-black/30 p-4 shadow-[0_10px_30px_rgba(0,255,120,0.06)]">
             <h3 className="text-xl font-bold text-green-300 mb-4 border-b border-gray-700/50 pb-2 flex items-center gap-2">
@@ -90,8 +90,6 @@ export default function App() {
     const { t } = useLanguage();
     const router = useRouter();
 
-    // --- Estados da Aplicação ---
-    const [showIntroOverlay, setShowIntroOverlay] = useState(true);
     const vinhetaRef = useRef<HTMLVideoElement | null>(null);
     const [sharesBought, setSharesBought] = useState(0);
     const [inputQuantity, setInputQuantity] = useState(1);
@@ -192,36 +190,6 @@ export default function App() {
     }, []);
 
     // --- Efeitos (Autoplay, Busca de Dados, Claims) ---
-
-    useEffect(() => {
-        // Lógica da vinheta (mantida)
-        let mounted = true;
-        const tryAutoplay = async () => {
-            await new Promise((r) => setTimeout(r, 50));
-            const v = vinhetaRef.current;
-            if (!v || !mounted) {
-                setShowIntroOverlay(false);
-                return;
-            }
-            try {
-                await v.play();
-                if (!mounted) return;
-                setShowIntroOverlay(true);
-            } catch (err) {
-                console.warn("Vinheta autoplay blocked — skipping intro:", err);
-                setShowIntroOverlay(false);
-            }
-        };
-        tryAutoplay();
-        const t = setTimeout(() => {
-            if (mounted) setShowIntroOverlay(false);
-        }, 20000);
-
-        return () => {
-            mounted = false;
-            clearTimeout(t);
-        };
-    }, []);
 
     useEffect(() => {
         fetchPoolData();
@@ -391,7 +359,6 @@ export default function App() {
                     <PoolStatusCard 
                         metrics={poolMetrics} 
                         sharesBought={sharesBought} 
-                        shareValue={shareValue} 
                     />
 
                     {/* Compact controls - Coluna de Compra (Ajustada) */}
