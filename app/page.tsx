@@ -1,43 +1,44 @@
-"use client";
+'use client'
 
-import Image from "next/image";
-import { useWallet } from "@/services/walletContext";
-import { doLogin, isRegistered } from "@/services/Web3Services";
-import { useState, useEffect } from "react";
-import AnimatedBackground from "@/components/AnimatedBackground";
-import RegisterModal from "@/components/RegisterModal";
+import Image from "next/image"
+import { useWallet } from "@/services/walletContext"
+import { doLogin, isRegistered } from "@/services/Web3Services"
+import { useState, useEffect } from "react"
+import AnimatedBackground from "@/components/AnimatedBackground"
+import RegisterModal from "@/components/RegisterModal"
+import { FaFilePdf } from "react-icons/fa" // Ícone do PDF já importado
 
 export default function Home() {
-    const { address, setAddress } = useWallet();
-    const [loading, setLoading] = useState(false);
+    const { address, setAddress } = useWallet()
+    const [loading, setLoading] = useState(false)
 
     // Garantir que o usuário está registrado
-    const [isRegisteredUser, setIsRegisteredUser] = useState<boolean | null>(null);
+    const [isRegisteredUser, setIsRegisteredUser] = useState<boolean | null>(null)
 
     // Quando conectar a wallet → checar registro
     useEffect(() => {
         if (address) {
             isRegistered(address).then((result) => {
-                setIsRegisteredUser(result);
-            });
+                setIsRegisteredUser(result)
+            })
         }
-    }, [address]);
+    }, [address])
 
     const handleLogin = async () => {
         try {
-            setLoading(true);
-            const newAddress = await doLogin();
-            setAddress(newAddress);
-            const registered = await isRegistered(newAddress);
-            setIsRegisteredUser(registered);
+            setLoading(true)
+            const newAddress = await doLogin()
+            setAddress(newAddress)
+            const registered = await isRegistered(newAddress)
+            setIsRegisteredUser(registered)
         } catch (err) {
-            console.error("Login failed:", err);
+            console.error("Login failed:", err)
         } finally {
-            setLoading(false);
+            setLoading(false)
         }
-    };
+    }
 
-    const canAccessGame = address && isRegisteredUser === true;
+    const canAccessGame = address && isRegisteredUser === true
 
     return (
         <div className="relative min-h-screen w-full overflow-hidden bg-black flex items-center justify-center">
@@ -77,9 +78,9 @@ export default function Home() {
                     <button
                         onClick={handleLogin}
                         className="mt-10 py-3 px-10 cursor-pointer text-black font-bold text-xl rounded-full
-                                   bg-gradient-to-r from-green-400 to-yellow-300
-                                   hover:from-green-500 hover:to-yellow-400
-                                   transition-all shadow-[0_0_20px_#00ff75]"
+                                         bg-gradient-to-r from-green-400 to-yellow-300
+                                         hover:from-green-500 hover:to-yellow-400
+                                         transition-all shadow-[0_0_20px_#00ff75]"
                     >
                         {loading ? "Connecting..." : "Connect Wallet"}
                     </button>
@@ -87,16 +88,16 @@ export default function Home() {
                     <a
                         href="/poolGame"
                         className="mt-10 py-3 px-10 text-black font-bold text-xl rounded-full
-                                   bg-gradient-to-r from-green-400 to-yellow-300
-                                   hover:from-green-500 hover:to-yellow-400
-                                   transition-all shadow-[0_0_20px_#00ff75]"
+                                         bg-gradient-to-r from-green-400 to-yellow-300
+                                         hover:from-green-500 hover:to-yellow-400
+                                         transition-all shadow-[0_0_20px_#00ff75]"
                     >
                         Enter PoolGame
                     </a>
                 ) : (
                     <button
                         className="mt-10 py-3 px-10 text-black font-bold text-xl rounded-full
-                                   bg-gray-600 opacity-50 cursor-not-allowed"
+                                         bg-gray-600 opacity-50 cursor-not-allowed"
                     >
                         Complete the Registration
                     </button>
@@ -108,7 +109,61 @@ export default function Home() {
                         {address.slice(0, 6)}...{address.slice(-4)}
                     </p>
                 )}
+
+                {/* 🔽 NOVO: SEÇÃO DE DOWNLOADS DOS PDFs MELHORADA 🔽 */}
+                <div className="mt-10 flex flex-col items-center space-y-3 w-full max-w-sm">
+                    <h3 className="text-xl font-extrabold text-green-400 drop-shadow-[0_0_15px_#00ff75] uppercase tracking-widest">
+                        Presentations
+                    </h3>
+                    <div className="flex flex-col space-y-3 w-full">
+                        
+                        {/* Cartão 1: Português */}
+                        <a
+                            href="/Pool Cash Portuguese.pdf"
+                            download
+                            className="flex items-center justify-between p-4 bg-gray-900/50 backdrop-blur-sm rounded-xl cursor-pointer
+                                       transition-all duration-300 transform border-2 border-gray-700
+                                       hover:border-green-400 hover:shadow-[0_0_15px_#00ff75]" // Efeito Neon/Glow
+                        >
+                            <span className="text-lg font-semibold text-gray-100">
+                                Português
+                            </span>
+                            <FaFilePdf className="text-green-400 text-2xl drop-shadow-[0_0_5px_#00ff75]" />
+                        </a>
+
+                        {/* Cartão 2: Spanish */}
+                        <a
+                            href="/Pool Cash Spanish.pdf"
+                            download
+                            className="flex items-center justify-between p-4 bg-gray-900/50 backdrop-blur-sm rounded-xl cursor-pointer
+                                       transition-all duration-300 transform border-2 border-gray-700
+                                       hover:border-yellow-300 hover:shadow-[0_0_15px_#ffeb3b]" // Efeito Neon/Glow (Amarelo)
+                        >
+                            <span className="text-lg font-semibold text-gray-100">
+                                Spanish
+                            </span>
+                            <FaFilePdf className="text-yellow-300 text-2xl drop-shadow-[0_0_5px_#ffeb3b]" />
+                        </a>
+
+                        {/* Cartão 3: English */}
+                        <a
+                            href="/Pool Cash English.pdf"
+                            download
+                            className="flex items-center justify-between p-4 bg-gray-900/50 backdrop-blur-sm rounded-xl cursor-pointer
+                                       transition-all duration-300 transform border-2 border-gray-700
+                                       hover:border-blue-400 hover:shadow-[0_0_15px_#00ff75]" // Efeito Neon/Glow
+                        >
+                            <span className="text-lg font-semibold text-gray-100">
+                                English
+                            </span>
+                            <FaFilePdf className="text-blue-400 text-2xl drop-shadow-[0_0_5px_#00ff75]" />
+                        </a>
+
+                    </div>
+                </div>
+                {/* 🔼 FIM DA SEÇÃO DE DOWNLOADS 🔼 */}
+
             </div>
         </div>
-    );
+    )
 }

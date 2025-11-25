@@ -3,12 +3,38 @@
 import { Canvas, useFrame } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import * as THREE from 'three'
-import { useRef } from 'react'
+import { useRef, useMemo } from 'react'
+
+/**
+ * Função utilitária para criar uma textura de círculo programaticamente.
+ * @returns {THREE.Texture} Textura de círculo.
+ */
+function createCircleTexture() {
+  const size = 64
+  const canvas = document.createElement('canvas')
+  canvas.width = size
+  canvas.height = size
+  const context = canvas.getContext('2d')
+  
+  if (context) {
+    context.beginPath()
+    context.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2)
+    context.fillStyle = 'white' // O branco será a parte visível/opaca
+    context.fill()
+  }
+
+  const texture = new THREE.CanvasTexture(canvas)
+  texture.needsUpdate = true
+  return texture
+}
 
 function Particles() {
   const count = 2000
   const radius = 15
   const points = useRef<THREE.Points>(null)
+
+  // Geração da textura de círculo
+  const circleTexture = useMemo(() => createCircleTexture(), [])
 
   // Criar posições das partículas
   const positions = new Float32Array(count * 3)
@@ -53,6 +79,9 @@ function Particles() {
         depthWrite={false}
         blending={THREE.AdditiveBlending}
         sizeAttenuation
+        
+        // NOVO: Aplica a textura de círculo para definir o formato do ponto
+        map={circleTexture} 
       />
     </points>
   )
@@ -64,7 +93,7 @@ export default function AnimatedBackground() {
       <Canvas camera={{ position: [0, 0, 6], fov: 75 }}>
         <ambientLight intensity={0.4} />
         
-        {/* Partículas neon */}
+        {/* Partículas neon circulares */}
         <Particles />
 
         {/* Rotação e movimento de câmera */}
