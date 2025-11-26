@@ -136,7 +136,6 @@ const ReferralNode: React.FC<ReferralNodeProps> = ({
 };
 
 const ReferralTree: React.FC<ReferralTreeProps> = ({ address }) => {
-  const { t } = useLanguage();
   const [tree, setTree] = useState<ReferralNodeType | null>(null);
   const [quantity, setQuantity] = useState(0);
 
