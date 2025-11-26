@@ -99,6 +99,10 @@ export default function App() {
     const [loadingClaim, setLoadingClaim] = useState(false);
     const [loadingReinvest, setLoadingReinvest] = useState(false);
     const [message, setMessage] = useState("");
+      const referralLink = `${
+    typeof window !== "undefined" ? window.location.origin : ""
+  }/?ref=${address}`;
+    const [copied, setCopied] = useState(false);
 
     const [modal, setModal] = useState<ModalState>({
         isOpen: false,
@@ -160,6 +164,13 @@ export default function App() {
             }
         }
     };
+
+      const handleCopy = () => {
+    if (!referralLink) return;
+    navigator.clipboard.writeText(referralLink);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000); // volta para "Copy" após 2 segundos
+  };
 
     const fetchUserPositions = useCallback(async (address: string) => {
         if (!address) return;
@@ -488,6 +499,14 @@ export default function App() {
                     <div className="mb-3">
                         <TickProgressBar progressPercentage={progressPercentage} />
                     </div>
+                    <a 
+    href={`https://app.uniswap.org/positions/v3/polygon/${position.id}`} 
+    target="_blank" 
+    rel="noreferrer" 
+    className="ml-auto text-sm text-yellow-300 hover:text-yellow-200 transition-colors flex items-center gap-1 self-center"
+>
+    View on Uniswap
+</a>
                     
                     {isReadyForAction && (
                         <div className={`mt-4 p-3 rounded-lg ${isDisabled ? "bg-gray-800" : "bg-green-900/40 border border-green-600/30"}`}>
@@ -548,9 +567,6 @@ export default function App() {
                                     {loadingReinvest ? <Loader2 className="animate-spin w-4 h-4 inline mr-2" /> : "Reinvest"}
                                 </motion.button>
                                 
-                                <a href={`https://app.uniswap.org/positions/v3/polygon/${position.id}`} target="_blank" rel="noreferrer" className="ml-auto text-sm text-yellow-300 hover:text-yellow-200 transition-colors flex items-center gap-1 self-center">
-                                    View on Uniswap
-                                </a>
                             </div>
                         </div>
                     )}
@@ -618,8 +634,46 @@ export default function App() {
                             )}
                         </motion.div>
                     </motion.div>
+
                 )}
-                        <div className="w-full m-auto max-w-[1200px] mt-[100px] border mb-[100px] relative z-200 
+     <div 
+    // Fundo escuro com leve transparência e borda verde neon
+    className="bg-black/40 relative z-20 border-2 max-w-[600px] mt-[100px] m-auto border-green-700 text-gray-100 rounded-xl p-4 mb-6
+               shadow-[0_0_15px_rgba(0,255,117,0.4)] transition-all duration-300 hover:border-green-400"
+>
+    <h2 className="text-xl font-extrabold mb-4 text-green-400 text-center uppercase tracking-wider drop-shadow-[0_0_5px_#00ff75]">
+        🔗 Your Referral Link
+    </h2>
+
+    <div className="flex flex-col sm:flex-row items-center gap-3 justify-between bg-gray-900 px-4 py-2 rounded-lg border border-gray-700">
+        
+        {/* Campo de input para o link */}
+        <input
+            type="text"
+            readOnly
+            value={referralLink}
+            // Cor do texto do link em amarelo neon para destaque
+            className="bg-transparent text-yellow-300 text-base font-mono truncate w-full sm:w-[50%] focus:outline-none"
+        />
+
+        {/* Botão de Copy com gradiente de marca */}
+        <button
+            onClick={handleCopy}
+            className={`
+                ${copied 
+                    ? "bg-green-500 hover:bg-green-600 shadow-none" // Copiado: Sólido verde
+                    : "bg-gradient-to-r from-green-400 to-yellow-300 hover:from-green-500 hover:to-yellow-400 shadow-[0_0_10px_#00ff75]" // Padrão: Gradiente Neon
+                } 
+                text-black cursor-pointer font-bold px-4 py-2 rounded-lg transition duration-200 text-sm sm:text-base w-full sm:w-auto
+            `}
+        >
+            {copied
+                ? "✅ Copied!"
+                : "Copy Link"}
+        </button>
+    </div>
+</div>
+                        <div className="w-full m-auto max-w-[1200px] mt-[30px] border mb-[100px] relative z-200 
                             bg-gray-900 border-green-600 rounded-2xl 
                             shadow-2xl shadow-green-900/50 p-4 sm:p-8">
                             

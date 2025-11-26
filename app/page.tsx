@@ -24,19 +24,28 @@ export default function Home() {
         }
     }, [address])
 
-    const handleLogin = async () => {
-        try {
-            setLoading(true)
-            const newAddress = await doLogin()
-            setAddress(newAddress)
-            const registered = await isRegistered(newAddress)
-            setIsRegisteredUser(registered)
-        } catch (err) {
-            console.error("Login failed:", err)
-        } finally {
-            setLoading(false)
-        }
+// Seu handleLogin já tem a lógica correta:
+
+const handleLogin = async () => {
+    try {
+        setLoading(true)
+        const newAddress = await doLogin()
+        
+        // 1. Atualiza o endereço
+        setAddress(newAddress) 
+        
+        // 2. Checa o registro IMEDIATAMENTE usando o newAddress
+        const registered = await isRegistered(newAddress)
+        
+        // 3. Atualiza o estado de registro
+        setIsRegisteredUser(registered)
+        
+    } catch (err) {
+        console.error("Login failed:", err)
+    } finally {
+        setLoading(false)
     }
+}
 
     const canAccessGame = address && isRegisteredUser === true
 

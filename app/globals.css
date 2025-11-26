@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+html, body{
+  margin: 0;
+  padding: 0;
+}
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -19,19 +23,6 @@
   }
 }
 
-.bg-overlay::before {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 400px;
-  height: 400px;
-  background: rgba(255, 205, 0, 0.14); /* Amarelo com transparência */
-  border-radius: 50%;
-  transform: translate(-50%, -80%);
-  filter: blur(100px);
-  z-index: 0;
-}
 
 @media (min-width: 600px) {
   .bg-overlay::before {

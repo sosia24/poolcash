@@ -31,13 +31,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <LanguageManager translations={translations}>
-        <WalletProvider>
-          <div className="w-full min-h-screen bg-black relative overflow-hidden">
-            <div className="relative flex items-center justify-center min-h-screen bg-overlay z-0 py-[20px] w-full mx-auto">
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <LanguageManager translations={translations}><WalletProvider>
+          <div className="w-full min-h-screen relative overflow-hidden">
+            <div className="relative flex items-center justify-center min-h-screen bg-overlay z-0 w-full mx-auto">
               {children}
             </div>
           </div>
