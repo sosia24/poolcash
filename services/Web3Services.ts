@@ -1908,12 +1908,14 @@ export async function fetchReferrals(userAddress: String) {
   const signer = await provider.getSigner();
 
   const queue = new ethers.Contract(
-    LINKCOLLECTOR_ADDRESS || "",
-    linkcollectorAbi,
+    MPOOLCASH_ADDRESS || "",
+    mpoolcashAbi,
     signer
   );
 
-  const [, , , referral] = await queue.getUser(userAddress);
+  const [, , referral] = await queue.getUser(userAddress);
+
+  console.log("Referrals for", userAddress, ":", referral);
   return referral;
 }
 
