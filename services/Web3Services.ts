@@ -1919,6 +1919,23 @@ export async function fetchReferrals(userAddress: String) {
   return referral;
 }
 
+
+export async function fetchSponsor(userAddress: String) {
+  const provider = await getProvider();
+  const signer = await provider.getSigner();
+
+  const queue = new ethers.Contract(
+    MPOOLCASH_ADDRESS || "",
+    mpoolcashAbi,
+    signer
+  );
+
+  const [, referral] = await queue.getUser(userAddress);
+
+  console.log("Referrals for", userAddress, ":", referral);
+  return referral[0];
+}
+
 export async function getTimeToreactivation(address: string) {
   try {
     const provider = new ethers.BrowserProvider(window.ethereum);

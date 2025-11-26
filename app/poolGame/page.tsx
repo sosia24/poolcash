@@ -13,6 +13,7 @@ import {
     claimMPoolCash,
     reinvestMPoolCash,
     hasPositionClaimed,
+    fetchSponsor,
 } from "@/services/Web3Services";
 import { useWallet } from "@/services/walletContext";
 import { TickProgressBar } from "@/components/tickProgessBar";
@@ -104,6 +105,7 @@ export default function App() {
   }/?ref=${address}`;
     const [copied, setCopied] = useState(false);
 
+  const [sponsor, setSponsor] = useState<string | null>(null);
     const [modal, setModal] = useState<ModalState>({
         isOpen: false,
         step: "approve",
@@ -125,6 +127,18 @@ export default function App() {
     });
 
     // --- Funções de Busca Web3 (useCallback) ---
+
+
+    async function getUserSponsor(){
+        try{
+            if(address){
+                const result = await fetchSponsor(address);
+                setSponsor(result)
+                }
+        }catch(error){
+            console.error("Failed to fetch sponsor:", error);   
+        }
+    }
 
     const fetchPoolData = useCallback(async () => {
         try {
@@ -211,6 +225,8 @@ export default function App() {
             fetchPoolData();
             if (address) fetchUserPositions(address);
         }, 15000);
+
+        getUserSponsor();
 
         return () => clearInterval(interval);
     }, [address, fetchPoolData, fetchUserPositions]);
@@ -659,7 +675,7 @@ export default function App() {
                     </motion.div>
 
                 )}
-     <div 
+    <div 
     // Fundo escuro com leve transparência e borda verde neon
     className="bg-black/40 relative z-20 border-2 max-w-[700px] mt-[100px] m-auto border-green-700 text-gray-100 rounded-xl p-4 mb-6
                shadow-[0_0_15px_rgba(0,255,117,0.4)] transition-all duration-300 hover:border-green-400"
@@ -667,6 +683,25 @@ export default function App() {
     <h2 className="text-xl font-extrabold mb-4 text-green-400 text-center uppercase tracking-wider drop-shadow-[0_0_5px_#00ff75]">
         🔗 Your Referral Link
     </h2>
+
+    {/* NOVO CAMPO: YOUR SPONSOR */}
+    <div className="mb-4">
+        <h3 className="text-sm font-semibold mb-2 text-green-300 uppercase tracking-wide">
+            👤 Your Sponsor
+        </h3>
+        <div className="flex items-center bg-gray-900 px-2 py-2 rounded-lg border border-gray-700">
+            {/* Campo de input para o Sponsor */}
+            <input
+                type="text"
+                readOnly
+                // Substitua 'sponsorInfo' pela sua variável que contém o nome/ID do sponsor
+                value={sponsor ? sponsor : "No sponsor assigned"} 
+                // Estilo do texto do sponsor: branco, mono, para contraste
+                className="bg-transparent text-white text-[12px] font-mono w-full focus:outline-none"
+            />
+        </div>
+    </div>
+    {/* FIM DO NOVO CAMPO */}
 
     <div className="flex flex-col sm:flex-row items-center gap-2 justify-between bg-gray-900 px-2 py-2 rounded-lg border border-gray-700">
         
