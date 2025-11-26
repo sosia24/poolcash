@@ -661,22 +661,22 @@ export default function App() {
                 )}
      <div 
     // Fundo escuro com leve transparência e borda verde neon
-    className="bg-black/40 relative z-20 border-2 max-w-[600px] mt-[100px] m-auto border-green-700 text-gray-100 rounded-xl p-4 mb-6
+    className="bg-black/40 relative z-20 border-2 max-w-[700px] mt-[100px] m-auto border-green-700 text-gray-100 rounded-xl p-4 mb-6
                shadow-[0_0_15px_rgba(0,255,117,0.4)] transition-all duration-300 hover:border-green-400"
 >
     <h2 className="text-xl font-extrabold mb-4 text-green-400 text-center uppercase tracking-wider drop-shadow-[0_0_5px_#00ff75]">
         🔗 Your Referral Link
     </h2>
 
-    <div className="flex flex-col sm:flex-row items-center gap-3 justify-between bg-gray-900 px-4 py-2 rounded-lg border border-gray-700">
+    <div className="flex flex-col sm:flex-row items-center gap-2 justify-between bg-gray-900 px-2 py-2 rounded-lg border border-gray-700">
         
         {/* Campo de input para o link */}
         <input
             type="text"
             readOnly
-            value={address ? address : ""}
+            value={referralLink}
             // Cor do texto do link em amarelo neon para destaque
-            className="bg-transparent text-yellow-300 text-base font-mono truncate w-full sm:w-[50%] focus:outline-none"
+            className="bg-transparent text-yellow-300 text-[10px] sm:text-[12px] font-mono truncate w-full sm:w-[80%] focus:outline-none"
         />
 
         {/* Botão de Copy com gradiente de marca */}
@@ -687,7 +687,7 @@ export default function App() {
                     ? "bg-green-500 hover:bg-green-600 shadow-none" // Copiado: Sólido verde
                     : "bg-gradient-to-r from-green-400 to-yellow-300 hover:from-green-500 hover:to-yellow-400 shadow-[0_0_10px_#00ff75]" // Padrão: Gradiente Neon
                 } 
-                text-black cursor-pointer font-bold px-4 py-2 rounded-lg transition duration-200 text-sm sm:text-base w-full sm:w-auto
+                text-black cursor-pointer font-bold px-2 py-2 rounded-lg transition duration-200 text-sm sm:text-base w-full sm:w-auto
             `}
         >
             {copied
