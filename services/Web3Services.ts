@@ -1948,8 +1948,6 @@ interface UserTable {
     directsQuantity: number;
     valueInvested: bigint;
 }
-
-const TOKEN_DIVISOR = 1000000n;
 /**
  * Busca e processa a tabela de elegibilidade do contrato, lidando com a string de valores concatenados.
  * @param userAddress O endereço do usuário.

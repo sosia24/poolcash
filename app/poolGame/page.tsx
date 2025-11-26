@@ -749,7 +749,7 @@ useEffect(() => {
                 type="text"
                 readOnly
                 // Substitua 'sponsorInfo' pela sua variável que contém o nome/ID do sponsor
-                value={sponsor ? sponsor : "No sponsor assigned"} 
+                value={sponsor ? sponsor.slice(0,6)+"..."+sponsor.slice(-4) : "No sponsor assigned"} 
                 // Estilo do texto do sponsor: branco, mono, para contraste
                 className="bg-transparent text-white text-[12px] font-mono w-full focus:outline-none"
             />
