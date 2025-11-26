@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   title: "PoolCash",
   description: "New innovative multi-pool system",
   icons: {
-    icon: "/Pool-Cash-Logo.svg", // Caminho relativo à pasta /public
+    icon: "/Pool-Cash-Logo.png", // Caminho relativo à pasta /public
   },
 };
 

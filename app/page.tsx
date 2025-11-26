@@ -54,17 +54,17 @@ export default function Home() {
 
                 {/* LOGO */}
                 <Image
-                    src="/Pool-Cash-Logo.svg"
-                    width={300}
-                    height={300}
+                    src="/Pool-Cash-Logo.png"
+                    width={350}
+                    height={350}
                     alt="PoolCash"
-                    className="drop-shadow-[0_0_20px_#00ff75]"
+                    className=""
                 />
 
                 <h1
                     className="mt-6 text-4xl md:text-6xl font-extrabold 
                     bg-gradient-to-r from-green-400 via-yellow-300 to-green-500 
-                    bg-clip-text text-transparent drop-shadow-[0_0_20px_#00ff75]"
+                    bg-clip-text text-transparent "
                 >
                     Welcome to PoolCash
                 </h1>

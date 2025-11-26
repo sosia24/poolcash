@@ -322,7 +322,7 @@ export default function App() {
             {/* LOGO E TÍTULO (Mantido) */}
             <div className="flex items-center gap-2 sm:gap-4">
                 <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full p-2 bg-black/60 flex items-center justify-center ring-2 ring-green-400/40 shadow-[0_0_15px_#00ff80]">
-                    <Image src="/Pool-Cash-Logo.svg" className="mt-[4px]" alt="logo" width={44} height={44} />
+                    <Image src="/Pool-Cash-Logo.png" className="mt-[4px]" alt="logo" width={44} height={44} />
                 </div>
                 <div>
                     <h1 className="text-xl sm:text-2xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-yellow-300">
