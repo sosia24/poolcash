@@ -8,14 +8,24 @@ interface ReferralNodeType {
   children?: ReferralNodeType[];
 }
 
+/**
+ * Ajusta as cores para o estilo Pool Cash (Dark/Azul-Petróleo)
+ * A cor de fundo varia com base no nível, ficando ligeiramente mais escura ou mais clara.
+ * @param level O nível de profundidade na árvore.
+ * @returns String com o valor da cor RGBA.
+ */
 function getBackgroundColor(level: number): string {
-  const baseRed = 255;
-  const baseGreen = 223 - level * 8;
-  const baseBlue = 100 + level * 5;
+  // Paleta Pool Cash: Base Azul-Escuro/Petróleo.
+  // A variação é sutil para manter o tema escuro.
+  const baseRed = 20;
+  const baseGreen = 50 + level * 5;
+  const baseBlue = 70 + level * 5;
+
   const red = Math.min(baseRed, 255);
-  const green = Math.max(baseGreen, 180);
-  const blue = Math.min(baseBlue, 180);
-  const opacity = Math.max(1 - level * 0.1, 0.85);
+  const green = Math.min(baseGreen, 100);
+  const blue = Math.min(baseBlue, 120);
+
+  const opacity = 0.95; // Opacidade ligeiramente mais alta para fundos escuros.
   return `rgba(${red}, ${green}, ${blue}, ${opacity})`;
 }
 
@@ -40,7 +50,7 @@ const ReferralNode: React.FC<ReferralNodeProps> = ({
     node.children || null
   );
   const [isLoading, setIsLoading] = useState(false);
-  const [hasLoaded, setHasLoaded] = useState(!!node.children); // novo
+  const [hasLoaded, setHasLoaded] = useState(!!node.children);
 
   const toggleExpand = async () => {
     const willExpand = !isExpanded;
@@ -67,26 +77,32 @@ const ReferralNode: React.FC<ReferralNodeProps> = ({
 
   return (
     <div className="w-full flex flex-col mb-2">
-      <div className="flex items-start group w-full cursor-pointer" onClick={toggleExpand}>
+      <div
+        className="flex items-start group w-full cursor-pointer"
+        onClick={toggleExpand}
+      >
         {level > 0 && (
-          <div className="hidden sm:block w-4 border-l-2 border-yellow-400 h-full mr-2"></div>
+          <div className="hidden sm:block w-4 border-l-2 border-green-400 h-full mr-2"></div>
+          // Usando verde-água como linha de conexão
         )}
 
         <div
-          className="flex items-center px-3 py-2 rounded shadow bg-white hover:shadow-md w-full transition-colors"
+          className="flex items-center px-3 py-2 rounded shadow-lg hover:shadow-xl w-full transition-shadow duration-300"
           style={{ backgroundColor }}
         >
-          <span className="bg-yellow-700 text-white text-xs px-2 py-1 rounded mr-2">
-            {t.networkTreePage.level} {level}
+          <span className="bg-green-600 text-white text-xs px-2 py-1 rounded-full mr-2 font-semibold">
+            {/* Destaque do Nível em Verde Escuro */}
+            Level {level}
           </span>
-          <span className="truncate text-black flex-1 min-w-0 text-sm sm:text-base">
+          <span className="truncate text-gray-100 flex-1 min-w-0 text-sm sm:text-base font-mono">
+            {/* Texto em Cinza Claro/Branco para o fundo escuro */}
             {node.address
               ? `${node.address.slice(0, 6)}...${node.address.slice(-4)}`
               : t.networkTreePage.noAddress}
           </span>
 
-          <div className="bg-yellow-500 text-xs text-gray-900 px-2 py-1 rounded ml-2 flex items-center hover:bg-yellow-400">
-            {/* 👇 Correção da contagem */}
+          <div className="bg-green-400 text-sm text-gray-900 px-3 py-1 rounded-full ml-2 flex items-center font-bold hover:bg-green-300 transition-colors duration-200">
+            {/* Contagem de Filhos em Destaque Verde-Água */}
             {isLoading
               ? "..."
               : hasLoaded
@@ -101,7 +117,7 @@ const ReferralNode: React.FC<ReferralNodeProps> = ({
         <div
           className={`flex flex-col mt-2 ${
             level > 0
-              ? "sm:pl-6 sm:ml-2 sm:border-l-2 sm:border-yellow-300"
+              ? "sm:pl-6 sm:ml-2 sm:border-l-2 sm:border-green-500" // Linha de conexão verde-água/ciano
               : ""
           }`}
         >
@@ -136,7 +152,6 @@ const ReferralTree: React.FC<ReferralTreeProps> = ({ address }) => {
         const root = await fetchReferralNode(address);
         setTree(root);
 
-        // ✅ Soma filhos diretos (nível 1)
         const directChildren = root.children?.length ?? 0;
         setQuantity(directChildren);
       } catch (error) {
@@ -148,22 +163,27 @@ const ReferralTree: React.FC<ReferralTreeProps> = ({ address }) => {
   }, [address]);
 
   return (
-    <div className="p-2 sm:p-4 bg-yellow-100 bg-opacity-50 rounded-2xl w-full sm:w-[96%] mx-auto overflow-x-auto">
+    // Fundo Principal: Dark (cinza-escuro ou azul-petróleo escuro)
+    <div className="p-2 sm:p-4 bg-gray-900 rounded-2xl w-full sm:w-[96%] mx-auto overflow-x-auto border border-green-500 shadow-2xl">
       <div className="min-w-[300px]">
         <h1 className="text-3xl sm:text-xl font-bold text-center mb-6">
-          <button className="bg-yellow-400 shadow-xl rounded-3xl w-[150px] h-[40px] font-semibold text-[18px] hover:bg-yellow-300 transition-colors">
-            {t.networkTreePage.teamButton}
+          <button className="bg-green-500 shadow-lg rounded-3xl w-[180px] h-[45px] font-bold text-[18px] text-gray-900 hover:bg-green-400 transition-colors duration-300">
+            {/* Botão de Destaque Verde-Água/Ciano */}
+            Team
           </button>
         </h1>
-        <h1 className="my-2 text-center sm:text-left text-gray-700">
-          {t.networkTreePage.totalAffiliated}: {quantity}
+        <h1 className="my-2 text-center sm:text-left text-green-400 font-semibold text-lg">
+          {/* Texto de Informação em Cor de Destaque */}
+          Number of affiliates: {quantity}
         </h1>
         {tree ? (
           <div className="flex flex-col w-full min-w-0 overflow-x-auto">
             <ReferralNode node={tree} onAddAffiliates={addAffiliates} />
           </div>
         ) : (
-          <p className="text-center text-gray-500">{t.networkTreePage.loading}</p>
+          <p className="text-center text-gray-400">
+            Loading
+          </p>
         )}
       </div>
     </div>

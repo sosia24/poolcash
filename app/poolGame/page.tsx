@@ -2,6 +2,8 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import ReferralTree from "@/components/networkModal";
+import { FiBarChart2 } from 'react-icons/fi';
 import {
     getUserTickIds,
     getTickDatas,
@@ -305,6 +307,7 @@ export default function App() {
         setInputQuantity(parsed);
         setInputValue(String(parsed));
     };
+    const COINGECKO_URL = "https://www.coingecko.com/en/coins/mpool?utm_source=geckoterminal&utm_medium=referral&utm_campaign=badge&asset_platform_api_symbol=polygon-pos";
 
     return (
         <div className="relative min-h-screen w-full bg-black text-white overflow-x-hidden font-sans">
@@ -315,39 +318,55 @@ export default function App() {
             </div>
 
             {/* Top bar */}
-            <header className="relative z-20 flex items-center justify-between px-4 sm:px-6 py-4 max-w-[1400px] mx-auto">
-                {/* LOGO E TÍTULO (Mantido) */}
-                <div className="flex items-center gap-2 sm:gap-4">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full p-2 bg-black/60 flex items-center justify-center ring-2 ring-green-400/40 shadow-[0_0_15px_#00ff80]">
-                        <Image src="/Pool-Cash-Logo.svg" className="mt-[4px]" alt="logo" width={44} height={44} />
-                    </div>
-                    <div>
-                        <h1 className="text-xl sm:text-2xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-yellow-300">
-                            MpoolCash
-                        </h1>
-                        <p className="text-xs text-gray-300 hidden sm:block">Liquidity Pool · Neon Edition</p>
-                    </div>
+           <header className="relative z-20 mb-4 border-b-2 border-gray-900 flex items-center justify-between px-4 sm:px-6 py-4 max-w-[1400px] mx-auto">
+            {/* LOGO E TÍTULO (Mantido) */}
+            <div className="flex items-center gap-2 sm:gap-4">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full p-2 bg-black/60 flex items-center justify-center ring-2 ring-green-400/40 shadow-[0_0_15px_#00ff80]">
+                    <Image src="/Pool-Cash-Logo.svg" className="mt-[4px]" alt="logo" width={44} height={44} />
                 </div>
+                <div>
+                    <h1 className="text-xl sm:text-2xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-yellow-300">
+                        MpoolCash
+                    </h1>
+                    <p className="text-xs text-gray-300 hidden sm:block">Liquidity Pool · Neon Edition</p>
+                </div>
+            </div>
 
-                {/* CONEXÃO / HOME (Mantido) */}
-                <div className="flex items-center gap-3">
-                    <button onClick={() => router.push("/")} className="text-sm cursor-pointer text-yellow-400 hover:text-yellow-300 transition-colors hidden sm:block">
-                        Home
-                    </button>
-                    {address ? (
-                        <div className="px-3 py-2 rounded-md bg-black/50 border border-green-700/30 transition-shadow hover:shadow-[0_0_10px_rgba(0,255,120,0.3)] cursor-pointer" onClick={switchAccount}>
-                            <div className="text-xs text-gray-300 hidden sm:block">{t.changeWallet?.connectedAs || "Connected as"}</div>
-                            <div className="text-sm text-yellow-400 font-mono">
-                                {address.slice(0, 4)}...{address.slice(-4)}
-                            </div>
+            {/* 📈 LINK PARA COINGECKO (NOVO) */}
+            <a
+                href={COINGECKO_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hidden lg:flex items-center gap-2 px-3 py-2 
+                           bg-gray-800 rounded-lg border border-green-700/50 
+                           text-green-400 font-semibold text-sm 
+                           hover:bg-green-600 hover:text-black hover:border-green-600 
+                           transition-all duration-300 shadow-md hover:shadow-green-500/30"
+            >
+                <FiBarChart2 className="w-4 h-4" />
+                MPool (CoinGecko)
+            </a>
+            {/* Fim do Link CoinGecko */}
+
+            {/* CONEXÃO / HOME (Mantido) */}
+            <div className="flex items-center gap-3">
+                <button onClick={() => router.push("/")} className="text-sm cursor-pointer text-yellow-400 hover:text-yellow-300 transition-colors hidden sm:block">
+                    Home
+                </button>
+                {address ? (
+                    <div className="px-3 py-2 rounded-md bg-black/50 border border-green-700/30 transition-shadow hover:shadow-[0_0_10px_rgba(0,255,120,0.3)] cursor-pointer" onClick={switchAccount}>
+                        <div className="text-xs text-gray-300 hidden sm:block">{t.changeWallet?.connectedAs || "Connected as"}</div>
+                        <div className="text-sm text-yellow-400 font-mono">
+                            {address.slice(0, 4)}...{address.slice(-4)}
                         </div>
-                    ) : (
-                        <button onClick={() => { /* Lógica de Conexão */ }} className="px-4 py-2 rounded-md bg-green-500 text-black font-semibold hover:bg-green-400 transition-colors">
-                            Connect
-                        </button>
-                    )}
-                </div>
-            </header>
+                    </div>
+                ) : (
+                    <button onClick={() => { /* Lógica de Conexão */ }} className="px-4 py-2 rounded-md bg-green-500 text-black font-semibold hover:bg-green-400 transition-colors">
+                        Connect
+                    </button>
+                )}
+            </div>
+        </header>
 
             {/* Main content */}
             <main className="relative z-10 max-w-[1400px] mx-auto px-4 sm:px-6 py-8 sm:py-10 grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -600,6 +619,21 @@ export default function App() {
                         </motion.div>
                     </motion.div>
                 )}
+                        <div className="w-full m-auto max-w-[1200px] mt-[100px] border mb-[100px] relative z-200 
+                            bg-gray-900 border-green-600 rounded-2xl 
+                            shadow-2xl shadow-green-900/50 p-4 sm:p-8">
+                            
+                            <h1 className="text-3xl font-extrabold text-green-400 mb-6 text-center 
+                                tracking-wider border-b border-green-700/50 pb-2">
+                                Network Status
+                            </h1>
+
+                            {address ? <ReferralTree address={address} /> : (
+                                <p className="text-center text-gray-500">
+                                    {t.networkEarningsPage.connectWalletPrompt}
+                                </p>
+                            )}
+                        </div>
             </AnimatePresence>
         </div>
     );

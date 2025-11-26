@@ -101,16 +101,16 @@ export default function RegisterModal() {
               {/* TÍTULO */}
               <h2 className="text-3xl font-bold bg-gradient-to-r 
                 from-green-400 to-yellow-300 bg-clip-text text-transparent text-center">
-                {t.networkRegisterModal.title}
+                Register
               </h2>
 
               <p className="text-gray-300 text-center mt-1">
-                {t.networkRegisterModal.subtitle}
+                Enter the referral address to continue.
               </p>
 
               {/* INPUT */}
               <label className="block text-sm text-gray-300 mt-6 mb-1">
-                {t.networkRegisterModal.referralLabel}
+                Referral Address
               </label>
 
               <input
@@ -139,7 +139,7 @@ export default function RegisterModal() {
                   text-black shadow-[0_0_20px_#00ff75]
                   hover:from-green-500 hover:to-yellow-400 transition-all"
               >
-                {loading ? "Registrando..." : t.networkRegisterModal.registerButton}
+                {loading ? "Registering..." : "Register Referral"}
               </button>
             </div>
           </motion.div>

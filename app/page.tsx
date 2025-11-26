@@ -126,7 +126,7 @@ export default function Home() {
                                        hover:border-green-400 hover:shadow-[0_0_15px_#00ff75]" // Efeito Neon/Glow
                         >
                             <span className="text-lg font-semibold text-gray-100">
-                                Português
+                                Portuguese
                             </span>
                             <FaFilePdf className="text-green-400 text-2xl drop-shadow-[0_0_5px_#00ff75]" />
                         </a>
