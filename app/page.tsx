@@ -47,7 +47,7 @@ const handleLogin = async () => {
     }
 }
 
-    const canAccessGame = address && isRegisteredUser === true
+
 
     return (
         <div className="relative min-h-screen w-full overflow-hidden bg-black flex items-center justify-center">

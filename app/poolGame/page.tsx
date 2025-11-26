@@ -334,12 +334,12 @@ export default function App() {
     <div className="flex items-center gap-2 sm:gap-4 mb-2 sm:mb-0">
         <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full p-2 bg-black/60 flex items-center justify-center ring-2 ring-green-400/40 shadow-[0_0_15px_#00ff80]">
             {/* Lembre-se de substituir <Image> pelo seu componente de imagem real */}
-            {/* <Image src="/Pool-Cash-Logo.png" className="mt-[4px]" alt="logo" width={44} height={44} /> */}
-            <span className="text-2xl text-green-400">💰</span>
+            <Image src="/Pool-Cash-Logo.png" className="mt-[4px]" alt="logo" width={44} height={44} />
+
         </div>
         <div>
             <h1 className="text-xl sm:text-2xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-yellow-300">
-                MpoolCash
+                PoolCash
             </h1>
             <p className="text-xs text-gray-300 hidden sm:block">Liquidity Pool · Neon Edition</p>
         </div>
@@ -674,7 +674,7 @@ export default function App() {
         <input
             type="text"
             readOnly
-            value={referralLink}
+            value={address ? address : ""}
             // Cor do texto do link em amarelo neon para destaque
             className="bg-transparent text-yellow-300 text-base font-mono truncate w-full sm:w-[50%] focus:outline-none"
         />
