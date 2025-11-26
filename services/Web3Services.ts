@@ -4004,10 +4004,6 @@ export async function getUserTickIds(address: string): Promise<number[]> {
   }
 }
 
-
-
-
-
 export async function getSellTeto() {
   const provider = getProvider();
   const signer = await provider.getSigner();
@@ -4040,63 +4036,54 @@ export async function getSellActual() {
   return Number(scaledPoints);
 }
 
-
-
-
-
 // Exemplo em Web3Services.js
 export async function viewPriceTick(tickValue: number) {
-    const provider = getProvider();
-    const signer = await provider.getSigner();
+  const provider = getProvider();
+  const signer = await provider.getSigner();
 
-    const usdt = new ethers.Contract(
-        MPOOLCASH_ADDRESS || "",
-        mpoolcashAbi,
-        signer
-    );
+  const usdt = new ethers.Contract(
+    MPOOLCASH_ADDRESS || "",
+    mpoolcashAbi,
+    signer
+  );
 
-    const tx = await usdt.viewPriceByTickQuantity(tickValue);
+  const tx = await usdt.viewPriceByTickQuantity(tickValue);
 
-    // --- CORREÇÃO APLICADA AQUI ---
-    // Converte o BigInt/BigNumber retornado para um número decimal usando 6 casas decimais (ou o número correto para sua moeda)
-    const priceMinFormatted = ethers.formatUnits(tx.priceMin, 6);
-    const priceMaxFormatted = ethers.formatUnits(tx.priceMax, 6);
-    // ------------------------------
+  // --- CORREÇÃO APLICADA AQUI ---
+  // Converte o BigInt/BigNumber retornado para um número decimal usando 6 casas decimais (ou o número correto para sua moeda)
+  const priceMinFormatted = ethers.formatUnits(tx.priceMin, 6);
+  const priceMaxFormatted = ethers.formatUnits(tx.priceMax, 6);
+  // ------------------------------
 
-    return { 
-        priceMin: Number(priceMinFormatted), 
-        priceMax: Number(priceMaxFormatted) 
-    };
+  return {
+    priceMin: Number(priceMinFormatted),
+    priceMax: Number(priceMaxFormatted),
+  };
 }
 
-
-
 export async function positionOrder(amount: number, tick: number) {
-  const provider = getProvider();
-  const signer = await provider.getSigner();
+  const provider = getProvider();
+  const signer = await provider.getSigner();
 
-  const usdt = new ethers.Contract(
-    MPOOLCASH_ADDRESS || "",
-    mpoolcashAbi,
-    signer
-  );
+  const usdt = new ethers.Contract(
+    MPOOLCASH_ADDRESS || "",
+    mpoolcashAbi,
+    signer
+  );
 
   // 1. CONVERTE O 'amount' PARA BIGINT COM 18 DECIMAIS
   // O valor de 'amount' será transformado em BigInt (ex: 1.5 Mpool vira 1500000000000000000n)
-  const amountWithDecimals = ethers.parseUnits(amount.toString(), 18);
+  const amountWithDecimals = ethers.parseUnits(amount.toString(), 18);
 
-  console.log("Amount (JavaScript):", amount);
-  console.log("Amount (18 Decimals):", amountWithDecimals.toString());
-  console.log("Tick:", tick);
+  console.log("Amount (JavaScript):", amount);
+  console.log("Amount (18 Decimals):", amountWithDecimals.toString());
+  console.log("Tick:", tick);
 
   // 2. Chama a função do contrato usando o valor BigInt formatado
-  const tx = await usdt.positionSellOrder(amountWithDecimals, tick);
+  const tx = await usdt.positionSellOrder(amountWithDecimals, tick);
 
-  return tx;
+  return tx;
 }
-
-
-
 
 export async function approveMpoolSellOrder(value: string | number) {
   const provider = getProvider();
@@ -4115,8 +4102,7 @@ export async function approveMpoolSellOrder(value: string | number) {
   return tx;
 }
 
-
-export async function getUserOpenTicks(address:string) {
+export async function getUserOpenTicks(address: string) {
   const provider = getProvider();
   const signer = await provider.getSigner();
 
@@ -4131,9 +4117,7 @@ export async function getUserOpenTicks(address:string) {
   return tx;
 }
 
-
-
-export async function claimSellOrderFront(tickId:number) {
+export async function claimSellOrderFront(tickId: number) {
   const provider = getProvider();
   const signer = await provider.getSigner();
 
