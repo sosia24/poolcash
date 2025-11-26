@@ -93,7 +93,7 @@ const handleLogin = async () => {
                     >
                         {loading ? "Connecting..." : "Connect Wallet"}
                     </button>
-                ) : canAccessGame ? (
+                ) : isRegisteredUser ? (
                     <a
                         href="/poolGame"
                         className="mt-10 py-3 px-10 text-black font-bold text-xl rounded-full

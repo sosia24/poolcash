@@ -319,7 +319,7 @@ export default function App() {
         setInputValue(String(parsed));
     };
     const COINGECKO_URL = "https://www.coingecko.com/en/coins/mpool?utm_source=geckoterminal&utm_medium=referral&utm_campaign=badge&asset_platform_api_symbol=polygon-pos";
-
+    const GROUP_URL = "https://chat.whatsapp.com/JD6jXMGrLouDTssmYHyw1a?mode=hqrc";
     return (
         <div className="relative min-h-screen w-full bg-black text-white overflow-x-hidden font-sans">
             {/* Animated background (particles) */}
@@ -329,55 +329,78 @@ export default function App() {
             </div>
 
             {/* Top bar */}
-           <header className="relative z-20 mb-4 border-b-2 border-gray-900 flex items-center justify-between px-4 sm:px-6 py-4 max-w-[1400px] mx-auto">
-            {/* LOGO E TÍTULO (Mantido) */}
-            <div className="flex items-center gap-2 sm:gap-4">
-                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full p-2 bg-black/60 flex items-center justify-center ring-2 ring-green-400/40 shadow-[0_0_15px_#00ff80]">
-                    <Image src="/Pool-Cash-Logo.png" className="mt-[4px]" alt="logo" width={44} height={44} />
-                </div>
-                <div>
-                    <h1 className="text-xl sm:text-2xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-yellow-300">
-                        MpoolCash
-                    </h1>
-                    <p className="text-xs text-gray-300 hidden sm:block">Liquidity Pool · Neon Edition</p>
+          <header className="relative z-20 mb-4 border-b-2 border-gray-900 flex flex-wrap items-center justify-between px-4 sm:px-6 py-4 max-w-[1400px] mx-auto">
+    {/* LOGO E TÍTULO */}
+    <div className="flex items-center gap-2 sm:gap-4 mb-2 sm:mb-0">
+        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full p-2 bg-black/60 flex items-center justify-center ring-2 ring-green-400/40 shadow-[0_0_15px_#00ff80]">
+            {/* Lembre-se de substituir <Image> pelo seu componente de imagem real */}
+            {/* <Image src="/Pool-Cash-Logo.png" className="mt-[4px]" alt="logo" width={44} height={44} /> */}
+            <span className="text-2xl text-green-400">💰</span>
+        </div>
+        <div>
+            <h1 className="text-xl sm:text-2xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-yellow-300">
+                MpoolCash
+            </h1>
+            <p className="text-xs text-gray-300 hidden sm:block">Liquidity Pool · Neon Edition</p>
+        </div>
+    </div>
+
+    {/* CONEXÃO / HOME (À direita, no topo) */}
+    <div className="flex items-center gap-3 order-3 w-full justify-end sm:order-2 sm:w-auto">
+        <button onClick={() => router.push("/")} className="text-sm cursor-pointer text-yellow-400 hover:text-yellow-300 transition-colors hidden sm:block">
+            Home
+        </button>
+        {address ? (
+            <div className="px-3 py-2 rounded-md bg-black/50 border border-green-700/30 transition-shadow hover:shadow-[0_0_10px_rgba(0,255,120,0.3)] cursor-pointer" onClick={switchAccount}>
+                <div className="text-xs text-gray-300 hidden sm:block">{t.changeWallet?.connectedAs || "Connected as"}</div>
+                <div className="text-sm text-yellow-400 font-mono">
+                    {address.slice(0, 4)}...{address.slice(-4)}
                 </div>
             </div>
+        ) : (
+            <button onClick={() => { /* Lógica de Conexão */ }} className="px-4 py-2 rounded-md bg-green-500 text-black font-semibold hover:bg-green-400 transition-colors">
+                Connect
+            </button>
+        )}
+    </div>
 
-            {/* 📈 LINK PARA COINGECKO (NOVO) */}
-            <a
-                href={COINGECKO_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hidden lg:flex items-center gap-2 px-3 py-2 
-                           bg-gray-800 rounded-lg border border-green-700/50 
-                           text-green-400 font-semibold text-sm 
-                           hover:bg-green-600 hover:text-black hover:border-green-600 
-                           transition-all duration-300 shadow-md hover:shadow-green-500/30"
-            >
-                <FiBarChart2 className="w-4 h-4" />
-                MPool (CoinGecko)
-            </a>
-            {/* Fim do Link CoinGecko */}
+    {/* LINKS DE NAVEGAÇÃO (Visíveis em todas as telas, abaixo do Logo/Título no mobile) */}
+    <div className="flex items-center justify-start gap-2 mt-4 sm:mt-0 w-full sm:w-auto order-2 sm:order-3">
+        
+        {/* 📈 LINK PARA COINGECKO (NOVO - Ajustado para ser visível no mobile) */}
+        <a
+            href={COINGECKO_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            // Classes ajustadas: usa flex sempre, e px-2 py-1 para ser mais compacto no mobile
+            className="flex items-center gap-1.5 px-2 py-1 
+                            bg-gray-800 rounded-lg border border-green-700/50 
+                            text-green-400 font-semibold text-xs sm:text-sm 
+                            hover:bg-green-600 hover:text-black hover:border-green-600 
+                            transition-all duration-300 shadow-md hover:shadow-green-500/30"
+        >
+            <FiBarChart2 className="w-4 h-4" />
+            <span className="hidden sm:inline">MPool</span> (CoinGecko)
+        </a>
 
-            {/* CONEXÃO / HOME (Mantido) */}
-            <div className="flex items-center gap-3">
-                <button onClick={() => router.push("/")} className="text-sm cursor-pointer text-yellow-400 hover:text-yellow-300 transition-colors hidden sm:block">
-                    Home
-                </button>
-                {address ? (
-                    <div className="px-3 py-2 rounded-md bg-black/50 border border-green-700/30 transition-shadow hover:shadow-[0_0_10px_rgba(0,255,120,0.3)] cursor-pointer" onClick={switchAccount}>
-                        <div className="text-xs text-gray-300 hidden sm:block">{t.changeWallet?.connectedAs || "Connected as"}</div>
-                        <div className="text-sm text-yellow-400 font-mono">
-                            {address.slice(0, 4)}...{address.slice(-4)}
-                        </div>
-                    </div>
-                ) : (
-                    <button onClick={() => { /* Lógica de Conexão */ }} className="px-4 py-2 rounded-md bg-green-500 text-black font-semibold hover:bg-green-400 transition-colors">
-                        Connect
-                    </button>
-                )}
-            </div>
-        </header>
+        {/* 💬 LINK PARA GRUPO (NOVO - Ajustado para ser visível no mobile) */}
+        <a
+            href={GROUP_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            // Classes ajustadas: usa flex sempre, e px-2 py-1 para ser mais compacto no mobile
+            className="flex items-center gap-1.5 px-2 py-1 
+                            bg-gray-800 rounded-lg border border-green-700/50 
+                            text-green-400 font-semibold text-xs sm:text-sm 
+                            hover:bg-green-600 hover:text-black hover:border-green-600 
+                            transition-all duration-300 shadow-md hover:shadow-green-500/30"
+        >
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12.001 2.001c-5.522 0-9.999 4.477-9.999 9.999 0 1.776.46 3.456 1.258 4.939l-1.42 5.485 5.422-1.472a9.946 9.946 0 0 0 4.739 1.148c5.522 0 9.999-4.477 9.999-9.999s-4.477-9.999-9.999-9.999zm4.234 13.978c-.287.798-.891 1.79-1.579 1.944-.559.123-1.042.062-1.67-.186-.689-.267-1.745-.678-3.322-1.859-1.233-.923-2.034-2.197-2.279-2.583-.245-.386-.027-.597.185-.809.186-.186.386-.445.572-.662.186-.186.246-.326.37-.543.123-.207.062-.386-.031-.543-.093-.186-.889-2.127-1.21-2.906-.321-.779-.642-.67-.889-.678-.207-.008-.444-.008-.689-.008-.245 0-.642.092-.972.463-.33.37-.999.992-.999 2.44 0 1.448 1.023 2.83 1.163 3.024.14.194 2.012 3.085 4.881 4.385 2.72 1.257 3.321 1.026 3.931.965.61-.061 1.99-.811 2.261-1.59.271-.779.271-.973.186-1.074-.093-.123-.287-.186-.608-.344z"/></svg>
+            <span className="hidden sm:inline">Group</span> (Whatsapp)
+        </a>
+    </div>
+
+</header>
 
             {/* Main content */}
             <main className="relative z-10 max-w-[1400px] mx-auto px-4 sm:px-6 py-8 sm:py-10 grid grid-cols-1 lg:grid-cols-3 gap-8">
