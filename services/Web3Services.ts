@@ -1936,6 +1936,74 @@ export async function fetchSponsor(userAddress: String) {
   return referral[0];
 }
 
+
+interface Table {
+    isEligible: boolean[];
+    directsRequirement: number[];
+    valueInvestedRequirement: bigint[]; 
+}
+
+interface UserTable {
+    table: Table;
+    directsQuantity: number;
+    valueInvested: bigint;
+}
+
+const TOKEN_DIVISOR = 1000000n;
+/**
+ * Busca e processa a tabela de elegibilidade do contrato, lidando com a string de valores concatenados.
+ * @param userAddress O endereço do usuário.
+ * @returns Os dados no formato UserTable.
+ */
+export async function fetchUserTable(userAddress: string): Promise<UserTable> {
+    const provider = await getProvider();
+    const signer = await provider.getSigner();
+
+    const queueContract = new ethers.Contract(
+        MPOOLCASH_ADDRESS || "",
+        mpoolcashAbi,
+        signer
+    );
+
+    // 1. CHAMA O CONTRATO (o resultado é uma tupla de 3 elementos)
+    const result = await queueContract.viewUserElegibleTable(userAddress);
+
+    // 2. EXTRAÇÃO DOS DADOS GLOBAIS
+    // (A correção anterior para garantir que result[0] é a string)
+    const rawTableString: string = result[0].toString();
+    const directsQuantity = Number(result.directsQuantity.toString());
+    const valueInvested = BigInt(result.valueInPool.toString());
+
+    // 3. PROCESSAMENTO DA STRING CONCATENADA (45 valores)
+    const values = rawTableString.split(',').map(v => v.trim());
+    
+    if (values.length !== 45) {
+        throw new Error(`Esperado 45 valores, mas encontrado ${values.length}. Verifique o retorno do contrato.`);
+    }
+    
+    // --- CONVERSÃO PARA BOOLEANOS ---
+    // Mesmo que o contrato retorne strings "true"/"false",
+    // esta linha CONVERTE as strings em tipos booleanos nativos do JavaScript.
+    const isEligible: boolean[] = values.slice(0, 15).map(v => v.toLowerCase() === 'true');
+    
+    // b) directsRequirement (uints - Itens 15 a 29)
+    const directsRequirement = values.slice(15, 30).map(v => Number(v)); 
+    
+    // c) valueInvestedRequirement (uint256 - Itens 30 a 44)
+    const valueInvestedRequirement = values.slice(30, 45).map(v => BigInt(v));
+    
+    // 4. RETORNA A ESTRUTURA FINAL
+    return {
+        directsQuantity,
+        valueInvested,
+        table: {
+            isEligible, // Array de booleanos nativos (Correto!)
+            directsRequirement,
+            valueInvestedRequirement,
+        }
+    };
+}
+
 export async function getTimeToreactivation(address: string) {
   try {
     const provider = new ethers.BrowserProvider(window.ethereum);

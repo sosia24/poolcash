@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import ReferralTree from "@/components/networkModal";
 import { FiBarChart2 } from 'react-icons/fi';
+import {EligibilityTable} from "@/components/EligibilityTable";
 import {
     getUserTickIds,
     getTickDatas,
@@ -14,6 +15,7 @@ import {
     reinvestMPoolCash,
     hasPositionClaimed,
     fetchSponsor,
+    fetchUserTable,
 } from "@/services/Web3Services";
 import { useWallet } from "@/services/walletContext";
 import { TickProgressBar } from "@/components/tickProgessBar";
@@ -58,6 +60,18 @@ interface PoolMetrics {
     apy: number;
 }
 
+interface Table {
+    isEligible: boolean[];
+    directsRequirement: number[];
+    valueInvestedRequirement: bigint[]; 
+}
+
+interface UserTable {
+    table: Table;
+    directsQuantity: number;
+    valueInvested: bigint;
+}
+
 // === COMPONENTE VISUAL NOVO: Pool Status Card ===
 const PoolStatusCard = ({ metrics, sharesBought }: { metrics: PoolMetrics; sharesBought: number;}) => {
     return (
@@ -92,7 +106,9 @@ export default function App() {
     const { address, setAddress } = useWallet();
     const { t } = useLanguage();
     const router = useRouter();
-
+        const ARRAY_15_BOOLEAN = Array(15).fill(false);
+        const ARRAY_15_NUMBER = Array(15).fill(0);
+        const ARRAY_15_BIGINT = Array(15).fill(0n);
     const [sharesBought, setSharesBought] = useState(0);
     const [inputQuantity, setInputQuantity] = useState(1);
     const [inputValue, setInputValue] = useState(String(1));
@@ -106,6 +122,18 @@ export default function App() {
     const [copied, setCopied] = useState(false);
 
   const [sponsor, setSponsor] = useState<string | null>(null);
+const [userTable, setUserTable] = useState<UserTable>({
+        // Dados do Usuário (inicia com zero)
+        directsQuantity: 0,
+        valueInvested: 0n, // Inicializa como BigInt
+
+        // Estrutura Table (inicia com arrays vazios/padrão de 15)
+        table: {
+            isEligible: ARRAY_15_BOOLEAN,
+            directsRequirement: ARRAY_15_NUMBER,
+            valueInvestedRequirement: ARRAY_15_BIGINT, 
+        }
+    });
     const [modal, setModal] = useState<ModalState>({
         isOpen: false,
         step: "approve",
@@ -139,6 +167,28 @@ export default function App() {
             console.error("Failed to fetch sponsor:", error);   
         }
     }
+
+
+useEffect(() => {
+        if (!address) return;
+
+        const loadData = async () => {
+            try {
+                const data = await fetchUserTable(address);
+                // 2. Atualiza o estado com os dados recebidos do contrato
+                setUserTable({
+                    // Assumindo que fetchEligibilityData já retorna no formato { table: { isEligible: [...], ... }, directsQuantity, valueInvested }
+                    ...data 
+                });
+            } catch (error) {
+                console.error("Falha ao carregar dados:", error);
+            } finally {
+                console.log("finis")
+            }
+        };
+
+        loadData();
+    }, [address]);
 
     const fetchPoolData = useCallback(async () => {
         try {
@@ -675,6 +725,10 @@ export default function App() {
                     </motion.div>
 
                 )}
+        <div className="p-4 relative z-200">
+            {/* 3. Renderiza o componente da tabela */}
+            <EligibilityTable userData={userTable} />
+        </div>
     <div 
     // Fundo escuro com leve transparência e borda verde neon
     className="bg-black/40 relative z-20 border-2 max-w-[700px] mt-[100px] m-auto border-green-700 text-gray-100 rounded-xl p-4 mb-6
