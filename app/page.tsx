@@ -120,7 +120,7 @@ const handleLogin = async () => {
                 )}
 
                 {/* 🔽 NOVO: SEÇÃO DE DOWNLOADS DOS PDFs MELHORADA 🔽 */}
-                <div className="mt-10 flex flex-col items-center space-y-3 w-full max-w-sm">
+                <div className="mt-10 flex flex-col mb-[100px] items-center space-y-3 w-full max-w-sm">
                     <h3 className="text-xl font-extrabold text-green-400 drop-shadow-[0_0_15px_#00ff75] uppercase tracking-widest">
                         Presentations
                     </h3>

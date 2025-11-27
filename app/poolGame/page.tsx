@@ -92,8 +92,8 @@ const PoolStatusCard = ({ metrics, sharesBought }: { metrics: PoolMetrics; share
 
             <div className="mt-6 pt-4 border-t border-gray-700/50 flex justify-between">
                 <div className="text-left">
-                    <div className="text-sm text-gray-300">Your Shares</div>
-                    <div className="text-xl font-bold text-white">{sharesBought}</div>
+                    <div className="text-sm text-gray-300">Total Shares</div>
+                    <div className="text-xl font-bold text-white">{sharesBought.toFixed(0)}</div>
                 </div>
             </div>
         </div>
@@ -725,7 +725,7 @@ useEffect(() => {
                     </motion.div>
 
                 )}
-        <div className="p-4 relative z-200">
+        <div className="p-4 relative z-20">
             {/* 3. Renderiza o componente da tabela */}
             <EligibilityTable userData={userTable} />
         </div>
