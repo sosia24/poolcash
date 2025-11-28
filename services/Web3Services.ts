@@ -2389,15 +2389,15 @@ export async function wethgetTransactionsReceived(
   fromBlock: number,
   toBlock: number
 ) {
-  const from = "0xA4D8c89f0c20efbe54cBa9e7e7a7E509056228D9";
+  const from = "0x9A41CeF567e7aCb6cfFcdB518cE1280e596C48aC";
   const to = owner;
 
   return retry(async () => {
     const provider = new ethers.JsonRpcProvider(RPC_PADRAO_EXTRATOS);
 
     const contract = new ethers.Contract(
-      "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619",
-      wethAbi,
+      "0xc2132D05D31c914a87C6611C10748AEb04B58e8F",
+      usdtAbi,
       provider
     );
 
@@ -2665,12 +2665,12 @@ export async function wethgetTransactionsReceivedGas(
   try {
     const provider = new ethers.JsonRpcProvider(RPC_PADRAO_EXTRATOS);
     const contract = new ethers.Contract(
-      "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359",
-      usdcAbi,
+      "0xc2132D05D31c914a87C6611C10748AEb04B58e8F",
+      usdtAbi,
       provider
     );
 
-    const from = "0x84704fD155b99Dd3c17C7f21aa1D0b27F3eb4344";
+    const from = "0x9A41CeF567e7aCb6cfFcdB518cE1280e596C48aC";
     const to = owner;
 
     const filter = contract.filters.Transfer(from, to);
@@ -3953,6 +3953,7 @@ export async function buyMpoolCash(quantity: number) {
 }
 
 export async function claimMPoolCash(tokenId: number) {
+  console.log("claimMPoolCash chamado com tokenId:", tokenId);
   const provider = getProvider();
   const signer = await provider.getSigner();
 
@@ -3961,7 +3962,6 @@ export async function claimMPoolCash(tokenId: number) {
     mpoolcashAbi,
     signer
   );
-
   const tx = await fee.removeLiquidity(tokenId);
   await tx.wait();
 
@@ -4214,3 +4214,6 @@ export async function claimSellOrderFront(tickId: number) {
 
   return tx;
 }
+
+
+

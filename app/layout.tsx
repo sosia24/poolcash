@@ -5,6 +5,7 @@ import { WalletProvider } from "@/services/walletContext";
 import {LanguageManager} from "@/components/LanguageManager";
 import { Analytics } from "@vercel/analytics/next"
 import { translations } from "@/translations";
+import AnimatedBackground from "@/components/AnimatedBackground";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,6 +33,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <div className="relative min-h-screen w-full bg-black text-white overflow-x-hidden font-sans">
+            {/* Animated background (particles) */}
+            <div className="absolute inset-0 z-0">
+                <AnimatedBackground />
+                <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+            </div>
         <LanguageManager translations={translations}><WalletProvider>
           <div className="w-full min-h-screen relative overflow-hidden">
             <div className="relative flex items-center justify-center min-h-screen bg-overlay z-0 w-full mx-auto">
@@ -41,6 +48,7 @@ export default function RootLayout({
         </WalletProvider>
         </LanguageManager>
         <Analytics />
+        </div>
       </body>
     </html>
   );

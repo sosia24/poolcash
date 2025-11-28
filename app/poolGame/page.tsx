@@ -1,10 +1,13 @@
 "use client";
 
+import { ethers } from "ethers";
 import { useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import ReferralTree from "@/components/networkModal";
 import { FiBarChart2 } from 'react-icons/fi';
 import {EligibilityTable} from "@/components/EligibilityTable";
+import { RefreshCw, TrendingUp } from 'lucide-react'; // Ícones adicionais
+import Link from "next/link";
 import {
     getUserTickIds,
     getTickDatas,
@@ -16,10 +19,10 @@ import {
     hasPositionClaimed,
     fetchSponsor,
     fetchUserTable,
+    wethgetTransactionsReceivedGas,
 } from "@/services/Web3Services";
 import { useWallet } from "@/services/walletContext";
 import { TickProgressBar } from "@/components/tickProgessBar";
-import AnimatedBackground from "@/components/AnimatedBackground";
 import { ExternalLink, Loader2, DollarSign } from "lucide-react"; // Novos ícones
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/components/LanguageManager";
@@ -71,6 +74,12 @@ interface UserTable {
     directsQuantity: number;
     valueInvested: bigint;
 }
+
+interface Transaction {
+  transactionHash: string;
+  value: string;
+}
+
 
 // === COMPONENTE VISUAL NOVO: Pool Status Card ===
 const PoolStatusCard = ({ metrics, sharesBought }: { metrics: PoolMetrics; sharesBought: number;}) => {
@@ -154,6 +163,9 @@ const [userTable, setUserTable] = useState<UserTable>({
         apy: 0,
     });
 
+          const [transactions, setTransactions] = useState<Transaction[]>([]);
+        const [currentToBlock, setCurrentToBlock] = useState<number | null>(null);
+  const blockStep = 10000;
     // --- Funções de Busca Web3 (useCallback) ---
 
 
@@ -167,6 +179,39 @@ const [userTable, setUserTable] = useState<UserTable>({
             console.error("Failed to fetch sponsor:", error);   
         }
     }
+
+
+    const loadTransactions = async () => {
+    console.log("chamou load transactions");
+    
+    if (!address) return;
+    console.log(2);
+
+    try {
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const latestBlock = currentToBlock ?? (await provider.getBlockNumber());
+      const fromBlock = Math.max(latestBlock - blockStep, 0);
+      const toBlock = latestBlock;
+
+
+      
+      console.log("aqui foi")
+      const txs = await wethgetTransactionsReceivedGas(address, fromBlock, toBlock);
+
+
+      setTransactions((prev) =>
+        [...prev, ...txs].filter(
+          (tx, index, self) =>
+            self.findIndex((t) => t.transactionHash === tx.transactionHash) ===
+            index
+        )
+      );
+      setCurrentToBlock(fromBlock - 1);
+    } catch (error) {
+      console.error("Error fetching transactions:", error);
+    }
+  };
+
 
 
 useEffect(() => {
@@ -205,6 +250,12 @@ useEffect(() => {
             console.error("Failed to fetch pool data:", error);
         }
     }, []);
+
+useEffect(() => {
+
+    loadTransactions();
+
+  }, [address, currentToBlock]);
 
     const switchAccount = async () => {
         if (window.ethereum) {
@@ -387,12 +438,9 @@ useEffect(() => {
     const COINGECKO_URL = "https://www.coingecko.com/en/coins/mpool?utm_source=geckoterminal&utm_medium=referral&utm_campaign=badge&asset_platform_api_symbol=polygon-pos";
     const GROUP_URL = "https://chat.whatsapp.com/JD6jXMGrLouDTssmYHyw1a?mode=hqrc";
     return (
-        <div className="relative min-h-screen w-full bg-black text-white overflow-x-hidden font-sans">
+        <div className="relative min-h-screen w-full text-white overflow-x-hidden font-sans">
             {/* Animated background (particles) */}
-            <div className="absolute inset-0 z-0">
-                <AnimatedBackground />
-                <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-            </div>
+            
 
             {/* Top bar */}
           <header className="relative z-20 mb-4 border-b-2 border-gray-900 flex flex-wrap items-center justify-between px-4 sm:px-6 py-4 max-w-[1400px] mx-auto">
@@ -625,7 +673,7 @@ useEffect(() => {
                                         }
                                     }}
                                     disabled={loadingClaim || loadingReinvest || isDisabled}
-                                    className={`px-4 py-2 rounded-md font-semibold text-black transition-all ${loadingClaim || loadingReinvest || isDisabled ? "bg-gray-600 text-gray-400 cursor-not-allowed" : "bg-yellow-500 hover:bg-yellow-400"}`}
+                                    className={`px-4 py-2 cursor-pointer rounded-md font-semibold text-black transition-all ${loadingClaim || loadingReinvest || isDisabled ? "bg-gray-600 text-gray-400 cursor-not-allowed" : "bg-yellow-500 hover:bg-yellow-400"}`}
                                 >
                                     {loadingClaim ? <Loader2 className="animate-spin w-4 h-4 inline mr-2" /> : "Claim"}
                                 </motion.button>
@@ -651,7 +699,7 @@ useEffect(() => {
                                         }
                                     }}
                                     disabled={loadingClaim || loadingReinvest || isDisabled}
-                                    className={`px-4 py-2 rounded-md font-semibold transition-all ${loadingClaim || loadingReinvest || isDisabled ? "bg-gray-600 text-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-500 text-white"}`}
+                                    className={`px-4 py-2 cursor-pointer rounded-md font-semibold transition-all ${loadingClaim || loadingReinvest || isDisabled ? "bg-gray-600 text-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-500 text-white"}`}
                                 >
                                     {loadingReinvest ? <Loader2 className="animate-spin w-4 h-4 inline mr-2" /> : "Reinvest"}
                                 </motion.button>
@@ -664,7 +712,41 @@ useEffect(() => {
             ) : (
                 <p className="text-sm text-gray-400 mt-2">Tick data not available. Position might be closed.</p>
             )}
+            
+                                <motion.button
+                                    onClick={async () => {
+                                        setLoadingClaim(true);
+                                        setMessage("");
+                                        try {
+                                            const tx = await claimMPoolCash(position.id);
+                                            // MENSAGEM DE SUCESSO MODIFICADA
+                                            setMessage("✅ Liquidity removed successfully! Waiting for TX confirmation...");
+                                            await tx.wait();
+                                            // MENSAGEM DE SUCESSO MODIFICADA
+                                            setMessage("✅ Liquidity removed successfully!");
+                                            if(address) await fetchUserPositions(address);
+                                        } catch (error) {
+                                            console.error(error);
+                                            // MENSAGEM DE ERRO MODIFICADA
+                                            setMessage("❌ Error removing liquidity. See console.");
+                                        } finally {
+                                            setLoadingClaim(false);
+                                        }
+                                    }}
+                                    // CONDIÇÕES DE DESABILITAÇÃO MODIFICADAS:
+                                    // Desabilitado se estiver carregando ou se a posição já estiver fechada/resgatada.
+                                    disabled={loadingClaim || loadingReinvest}
+                                    className={`px-4 py-2 rounded-md font-semibold mt-[20px] cursor-pointer text-white transition-all ${
+                                        loadingClaim || loadingReinvest
+                                            ? "bg-gray-600 text-gray-400 cursor-not-allowed" // Estilo desabilitado
+                                            : "bg-orange-500 hover:bg-orange-400" // Cor Laranja ativa
+                                    }`}
+                                >
+                                    {/* TEXTO DO BOTÃO MODIFICADO */}
+                                    {loadingClaim ? <Loader2 className="animate-spin w-4 h-4 inline mr-2" /> : "Remove Liquidity"}
+                                </motion.button>
         </div>
+        
     );
 })}
                             </div>
@@ -800,7 +882,86 @@ useEffect(() => {
                                 </p>
                             )}
                         </div>
-            </AnimatePresence>
+
+<div className="relative z-20 max-w-[650px] p-4 m-auto mt-10 mb-[100px]">
+    <div className="bg-gray-900 border border-green-800/50 text-gray-100 rounded-xl shadow-2xl shadow-green-500/10 overflow-hidden transition-all duration-300">
+        
+        {/* Header: Destaque Verde/Amarelo */}
+        <div className="bg-gray-800 border-b border-green-800 text-white py-4 px-6 font-bold text-2xl tracking-wider flex items-center justify-between">
+            <h1 className="text-green-400 flex items-center gap-2">
+                <TrendingUp className="w-6 h-6 text-yellow-300" />
+                Pool Cash Rewards
+            </h1>
+            <RefreshCw className="text-green-500 text-xl cursor-pointer hover:rotate-180 transition-transform" />
+        </div>
+
+        {/* Corpo da Lista */}
+        <div className="max-h-[400px] overflow-y-auto p-3 scrollbar-thin scrollbar-thumb-yellow-600/50 scrollbar-track-gray-900">
+            
+            {/* Títulos da Tabela (Desktop) */}
+            <div className="hidden sm:grid grid-cols-12 text-xs text-gray-500 font-semibold uppercase px-4 py-2 border-b border-gray-700">
+                <div className="col-span-6">Status / Hash</div>
+                <div className="col-span-6 text-right">Value (USDT)</div>
+            </div>
+
+            {transactions.length > 0 ? (
+                transactions.map((tx: Transaction, index: number) => (
+                    <Link
+                        key={index}
+                        href={`https://polygonscan.com/tx/${tx.transactionHash}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        // Novo Estilo do Cartão: Mais plano, com foco na linha verde/amarela
+                        className="block bg-gray-800/70 hover:bg-gray-800 transition-all duration-150 rounded-lg p-3 sm:p-4 mb-2 border-l-4 border-green-600/80 hover:border-yellow-400 group"
+                    >
+                        
+                        <div className="flex justify-between items-center sm:grid sm:grid-cols-12">
+                            
+                            {/* Coluna Esquerda: Status e Hash */}
+                            <div className="col-span-6 flex flex-col min-w-0">
+                                <div className="flex items-center gap-2 mb-1">
+                                    <span className="text-green-400 font-bold text-sm sm:text-base">Deposit Confirmed</span>
+                                </div>
+                                
+                                {/* Hash encurtado, menos ênfase, estilo Ledger */}
+                                <p 
+                                    className="text-gray-500 text-xs truncate font-mono group-hover:text-yellow-400"
+                                    title={tx.transactionHash}
+                                >
+                                    {/* Assumindo que shortenAddress foi adicionado ao seu App.tsx */}
+                                    Tx: {tx.transactionHash} 
+                                </p>
+                            </div>
+                            
+                            {/* Coluna Direita: Valor e Moeda */}
+                            <div className="col-span-6 text-right ml-4 flex-shrink-0">
+                                <p className="text-yellow-300 font-extrabold text-lg sm:text-xl font-mono tracking-tighter">
+                                    +{parseFloat(tx.value).toFixed(2)}
+                                </p>
+                                <p className="text-gray-500 text-xs font-semibold sm:hidden">
+                                    USDT
+                                </p>
+                            </div>
+                        </div>
+
+                    </Link>
+                ))
+            ) : (
+                // Estado Vazio: Destaque Amarelo
+                <div className="text-center bg-gray-800/70 border border-gray-700 rounded-xl p-10 mt-2">
+                    <p className="text-yellow-300 text-2xl mb-2">💰 Waiting for Activity...</p>
+                    <p className="text-gray-500 italic">
+                        No transactions found in this range.
+                    </p>
+                </div>
+            )}
+        </div>
+        
+
+
+    </div>
+</div>       
+ </AnimatePresence>
         </div>
     );
 }
