@@ -7,6 +7,7 @@ import ReferralTree from "@/components/networkModal";
 import { FiBarChart2 } from 'react-icons/fi';
 import {EligibilityTable} from "@/components/EligibilityTable";
 import { RefreshCw, TrendingUp } from 'lucide-react'; // Ícones adicionais
+import { MdAttachMoney } from "react-icons/md";
 import Link from "next/link";
 import {
     getUserTickIds,
@@ -20,6 +21,7 @@ import {
     fetchSponsor,
     fetchUserTable,
     wethgetTransactionsReceivedGas,
+    getEarns,
 } from "@/services/Web3Services";
 import { useWallet } from "@/services/walletContext";
 import { TickProgressBar } from "@/components/tickProgessBar";
@@ -130,6 +132,8 @@ export default function App() {
   }/?ref=${address}`;
     const [copied, setCopied] = useState(false);
 
+    const [earns, setEarns] = useState<number>(0);
+
   const [sponsor, setSponsor] = useState<string | null>(null);
 const [userTable, setUserTable] = useState<UserTable>({
         // Dados do Usuário (inicia com zero)
@@ -177,6 +181,17 @@ const [userTable, setUserTable] = useState<UserTable>({
                 }
         }catch(error){
             console.error("Failed to fetch sponsor:", error);   
+        }
+    }
+
+    async function getFrontEarns(){
+        try {
+            if(address){
+                const earns = await getEarns(address);
+                setEarns(earns);
+            }
+        }catch (error) {
+            console.error("Failed to fetch earns:", error);
         }
     }
 
@@ -254,6 +269,7 @@ useEffect(() => {
 useEffect(() => {
 
     loadTransactions();
+    getFrontEarns();
 
   }, [address, currentToBlock]);
 
@@ -437,6 +453,7 @@ useEffect(() => {
     };
     const COINGECKO_URL = "https://www.coingecko.com/en/coins/mpool?utm_source=geckoterminal&utm_medium=referral&utm_campaign=badge&asset_platform_api_symbol=polygon-pos";
     const GROUP_URL = "https://chat.whatsapp.com/JD6jXMGrLouDTssmYHyw1a?mode=hqrc";
+    const SELL_URL = "https://multpool.io/?ref=0x8b0c1a3f60908ab79e71bd7de26e3f175f7be0dd";
     return (
         <div className="relative min-h-screen w-full text-white overflow-x-hidden font-sans">
             {/* Animated background (particles) */}
@@ -479,7 +496,7 @@ useEffect(() => {
     </div>
 
     {/* LINKS DE NAVEGAÇÃO (Visíveis em todas as telas, abaixo do Logo/Título no mobile) */}
-    <div className="flex items-center justify-start gap-2 mt-4 sm:mt-0 w-full sm:w-auto order-2 sm:order-3">
+    <div className="flex items-center justify-start lg:mt-[0px] mt-[20px] gap-2   w-full sm:w-auto order-2 sm:order-3">
         
         {/* 📈 LINK PARA COINGECKO (NOVO - Ajustado para ser visível no mobile) */}
         <a
@@ -495,6 +512,21 @@ useEffect(() => {
         >
             <FiBarChart2 className="w-4 h-4" />
             <span className="hidden sm:inline">MPool</span> (CoinGecko)
+        </a>
+
+        <a
+            href={SELL_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            // Classes ajustadas: usa flex sempre, e px-2 py-1 para ser mais compacto no mobile
+            className="flex items-center gap-1.5 px-2 py-1 
+                            bg-gray-800 rounded-lg border border-green-700/50 
+                            text-green-400 font-semibold text-xs sm:text-sm 
+                            hover:bg-green-600 hover:text-black hover:border-green-600 
+                            transition-all duration-300 shadow-md hover:shadow-green-500/30"
+        >
+            <MdAttachMoney className="w-4 h-4" />
+            <span className="hidden sm:inline">Sell</span> (Mpool)
         </a>
 
         {/* 💬 LINK PARA GRUPO (NOVO - Ajustado para ser visível no mobile) */}
@@ -585,11 +617,7 @@ useEffect(() => {
                             </a>
                         </div>
 
-<div  className=" w-[80%] m-auto p-4 bg-black bg-opacity-30 border border-yellow-400/30 rounded-lg mb-6">
-          <p className="text-[16px] font-bold mb-[5px]">*Important Notice:*<br /></p>
 
-         <p> You have 72 hours to decide between making your claim or reinvesting.<br></br>   If you do not make a decision within this time frame, your authorization to reinvest will be applied automatically, contributing to the movement of the asset in the market</p>
-         </div>
                         {isPositionsLoading ? (
                             <div className="text-gray-400 flex items-center gap-2 mt-4">
                                 <Loader2 className="animate-spin w-5 h-5" /> Loading your positions...
@@ -900,6 +928,19 @@ useEffect(() => {
             </h1>
             <RefreshCw className="text-green-500 text-xl cursor-pointer hover:rotate-180 transition-transform" />
         </div>
+<div className="text-center py-3 px-6 bg-gray-900 border-b border-gray-700">
+            <p className="text-sm font-semibold text-gray-400 uppercase tracking-widest mb-1">
+                Network Earns
+            </p>
+            <div className="flex justify-center items-baseline gap-2">
+                <span className="text-4xl font-extrabold font-mono tracking-tight text-yellow-300">
+                    {earns.toFixed(2)}
+                </span>
+                <span className="text-lg font-bold text-green-400">
+                    USDT
+                </span>
+            </div>
+        </div>
 
         {/* Corpo da Lista */}
         <div className="max-h-[400px] overflow-y-auto p-3 scrollbar-thin scrollbar-thumb-yellow-600/50 scrollbar-track-gray-900">
@@ -967,6 +1008,11 @@ useEffect(() => {
 
     </div>
 
+<div  className=" w-[80%] mt-[50px] m-auto p-4 bg-black bg-opacity-30 border border-yellow-400/30 rounded-lg mb-6">
+          <p className="text-[18px] font-bold mb-[5px]">Important Notice:<br /></p>
+
+         <p> You have 72 hours to decide between making your claim or reinvesting.<br></br>   If you do not make a decision within this time frame, your authorization to reinvest will be applied automatically, contributing to the movement of the asset in the market.</p>
+         </div>
 </div>   
     <div className="p-4 relative z-20">
             {/* 3. Renderiza o componente da tabela */}

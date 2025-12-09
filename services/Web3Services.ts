@@ -4217,3 +4217,20 @@ export async function claimSellOrderFront(tickId: number) {
 
 
 
+
+
+export async function getEarns(address:string) {
+  const provider = getProvider();
+  const signer = await provider.getSigner();
+
+  const usdt = new ethers.Contract(
+    MPOOLCASH_ADDRESS || "",
+    mpoolcashAbi,
+    signer
+  );
+
+  const tx = await usdt.earns(address);
+  const scaledPoints = ethers.formatUnits(tx, 6);
+
+  return Number(scaledPoints);
+}
