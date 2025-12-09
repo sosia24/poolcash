@@ -519,6 +519,7 @@ useEffect(() => {
             {/* Main content */}
             <main className="relative z-10 max-w-[1400px] mx-auto px-4 sm:px-6 py-8 sm:py-10 grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Left column: Pool Status Card + controls */}
+                
                 <section className="lg:col-span-1 flex flex-col items-center lg:items-start gap-6 order-2 lg:order-1">
                     
                     {/* NOVO: Pool Status Card */}
@@ -584,6 +585,11 @@ useEffect(() => {
                             </a>
                         </div>
 
+<div  className=" w-[80%] m-auto p-4 bg-black bg-opacity-30 border border-yellow-400/30 rounded-lg mb-6">
+          <p className="text-[16px] font-bold mb-[5px]">*Important Notice:*<br /></p>
+
+         <p> You have 72 hours to decide between making your claim or reinvesting.<br></br>   If you do not make a decision within this time frame, your authorization to reinvest will be applied automatically, contributing to the movement of the asset in the market</p>
+         </div>
                         {isPositionsLoading ? (
                             <div className="text-gray-400 flex items-center gap-2 mt-4">
                                 <Loader2 className="animate-spin w-5 h-5" /> Loading your positions...
@@ -615,8 +621,11 @@ useEffect(() => {
     const targetPrice = position.data ? tickToPrice(position.data.upperTick).mul(new Decimal(10).pow(12)).toFixed(6) : "N/A";
     
     return (
+        
         <div key={position.id} className="p-4 rounded-xl bg-black/50 border border-green-700/20 transition-all hover:border-green-600/50">
+            
             <div className="flex items-center justify-between mb-3 border-b border-gray-700/30 pb-2">
+            
                 {/* ... (restante do código) ... */}
                 <div>
                     <div className="text-sm text-gray-400">Position ID</div>
@@ -807,10 +816,7 @@ useEffect(() => {
                     </motion.div>
 
                 )}
-        <div className="p-4 relative z-20">
-            {/* 3. Renderiza o componente da tabela */}
-            <EligibilityTable userData={userTable} />
-        </div>
+
     <div 
     // Fundo escuro com leve transparência e borda verde neon
     className="bg-black/40 relative z-20 border-2 max-w-[700px] mt-[100px] m-auto border-green-700 text-gray-100 rounded-xl p-4 mb-6
@@ -956,11 +962,16 @@ useEffect(() => {
                 </div>
             )}
         </div>
-        
+                
 
 
     </div>
-</div>       
+
+</div>   
+    <div className="p-4 relative z-20">
+            {/* 3. Renderiza o componente da tabela */}
+            <EligibilityTable userData={userTable} />
+        </div>    
  </AnimatePresence>
         </div>
     );
