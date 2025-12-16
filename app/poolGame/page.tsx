@@ -677,7 +677,7 @@ useEffect(() => {
     href={`https://app.uniswap.org/positions/v3/polygon/${position.id}`} 
     target="_blank" 
     rel="noreferrer" 
-    className="ml-auto text-sm text-yellow-300 hover:text-yellow-200 transition-colors flex items-center gap-1 self-center"
+    className="ml-auto text-sm rounded-md max-w-[130px] bg-pink-500 p-2 transition-colors flex items-center gap-1 self-center"
 >
     View on Uniswap
 </a>
@@ -773,10 +773,10 @@ useEffect(() => {
                                     // CONDIÇÕES DE DESABILITAÇÃO MODIFICADAS:
                                     // Desabilitado se estiver carregando ou se a posição já estiver fechada/resgatada.
                                     disabled={loadingClaim || loadingReinvest}
-                                    className={`px-4 py-2 rounded-md font-semibold mt-[20px] cursor-pointer text-white transition-all ${
+                                    className={`px-2 py-1 rounded-md font-semibold mt-[20px] text-[8px] cursor-pointer text-white transition-all ${
                                         loadingClaim || loadingReinvest
                                             ? "bg-gray-600 text-gray-400 cursor-not-allowed" // Estilo desabilitado
-                                            : "bg-orange-500 hover:bg-orange-400" // Cor Laranja ativa
+                                            : "bg-orange-700 hover:bg-orange-600" // Cor Cinza ativa
                                     }`}
                                 >
                                     {/* TEXTO DO BOTÃO MODIFICADO */}
