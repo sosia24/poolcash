@@ -792,7 +792,7 @@ useEffect(() => {
             <div className="mt-6 flex gap-3">
                 <button
                     onClick={() => setIsModalOpen(false)}
-                    className="flex-1 px-4 py-2 rounded-md bg-gray-700 hover:bg-gray-600 text-white text-[10px] font-semibold transition-colors"
+                    className="flex-1 px-4 py-2 cursor-pointer rounded-md bg-gray-700 hover:bg-gray-600 text-white text-[10px] font-semibold transition-colors"
                 >
                     Cancel
                 </button>
@@ -814,7 +814,7 @@ useEffect(() => {
                             setLoadingClaim(false);
                         }
                     }}
-                    className="flex-1 px-4 py-2 rounded-md bg-orange-700 hover:bg-orange-600 text-white text-[10px] font-semibold transition-colors"
+                    className="flex-1 px-4 py-2 cursor-pointer rounded-md bg-orange-700 hover:bg-orange-600 text-white text-[10px] font-semibold transition-colors"
                 >
                     Confirm & Remove
                 </button>
