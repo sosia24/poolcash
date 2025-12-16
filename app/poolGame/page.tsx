@@ -132,7 +132,10 @@ export default function App() {
   }/?ref=${address}`;
     const [copied, setCopied] = useState(false);
 
-    const [earns, setEarns] = useState<number>(0);
+    const [earns, setEarns] = useState<number>(0);  
+
+    const [clickRemoveLiquidity, setClickRemoveLiquidity] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [sponsor, setSponsor] = useState<string | null>(null);
 const [userTable, setUserTable] = useState<UserTable>({
@@ -171,6 +174,10 @@ const [userTable, setUserTable] = useState<UserTable>({
         const [currentToBlock, setCurrentToBlock] = useState<number | null>(null);
   const blockStep = 10000;
     // --- Funções de Busca Web3 (useCallback) ---
+
+    async function doRemoveLiquidity() {
+        setClickRemoveLiquidity(!clickRemoveLiquidity);
+    }
 
 
     async function getUserSponsor(){
@@ -751,38 +758,72 @@ useEffect(() => {
             )}
             
                                 <motion.button
-                                    onClick={async () => {
-                                        setLoadingClaim(true);
-                                        setMessage("");
-                                        try {
-                                            const tx = await claimMPoolCash(position.id);
-                                            // MENSAGEM DE SUCESSO MODIFICADA
-                                            setMessage("✅ Liquidity removed successfully! Waiting for TX confirmation...");
-                                            await tx.wait();
-                                            // MENSAGEM DE SUCESSO MODIFICADA
-                                            setMessage("✅ Liquidity removed successfully!");
-                                            if(address) await fetchUserPositions(address);
-                                        } catch (error) {
-                                            console.error(error);
-                                            // MENSAGEM DE ERRO MODIFICADA
-                                            setMessage("❌ Error removing liquidity. See console.");
-                                        } finally {
-                                            setLoadingClaim(false);
-                                        }
-                                    }}
-                                    // CONDIÇÕES DE DESABILITAÇÃO MODIFICADAS:
-                                    // Desabilitado se estiver carregando ou se a posição já estiver fechada/resgatada.
-                                    disabled={loadingClaim || loadingReinvest}
-                                    className={`px-2 py-1 rounded-md font-semibold mt-[20px] text-[8px] cursor-pointer text-white transition-all ${
-                                        loadingClaim || loadingReinvest
-                                            ? "bg-gray-600 text-gray-400 cursor-not-allowed" // Estilo desabilitado
-                                            : "bg-orange-700 hover:bg-orange-600" // Cor Cinza ativa
-                                    }`}
-                                >
-                                    {/* TEXTO DO BOTÃO MODIFICADO */}
-                                    {loadingClaim ? <Loader2 className="animate-spin w-4 h-4 inline mr-2" /> : "Remove Liquidity"}
-                                </motion.button>
+    onClick={() => setIsModalOpen(true)}
+    disabled={loadingClaim || loadingReinvest}
+    className={`px-2 py-1 rounded-md font-semibold mt-[20px] text-[8px] cursor-pointer text-white transition-all ${
+        loadingClaim || loadingReinvest
+            ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+            : "bg-orange-700 hover:bg-orange-600"
+    }`}
+>
+    {loadingClaim ? <Loader2 className="animate-spin w-4 h-4 inline mr-2" /> : "Remove Liquidity"}
+</motion.button>
+{isModalOpen && (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 backdrop-blur-sm p-4">
+        <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-[#1a1a1a] border border-gray-700 p-6 rounded-xl max-w-md w-full shadow-2xl"
+        >
+            <h3 className="text-white text-lg font-bold mb-4">Confirm Liquidity Removal</h3>
+            
+            <div className="text-gray-300 text-xs space-y-4 leading-relaxed">
+                <p>
+                    You will receive <strong>100% of your liquidity in MPool</strong>. 
+                    Liquidity can be removed at any time, and your liquidity will be sent directly to your wallet.
+                </p>
+                <p className="bg-orange-900/20 border-l-2 border-orange-600 p-3 italic">
+                    It's important to remember that MPool is sold through MultpoolDEX, where there is a 
+                    <strong> 50% fee in USDC</strong> at the time of sale. You can sell the coin whenever you want, 
+                    following the exchange rate you prefer, while adhering to this fee rule.
+                </p>
+            </div>
+
+            <div className="mt-6 flex gap-3">
+                <button
+                    onClick={() => setIsModalOpen(false)}
+                    className="flex-1 px-4 py-2 rounded-md bg-gray-700 hover:bg-gray-600 text-white text-[10px] font-semibold transition-colors"
+                >
+                    Cancel
+                </button>
+                <button
+                    onClick={async () => {
+                        setIsModalOpen(false); // Fecha o modal
+                        setLoadingClaim(true);
+                        setMessage("");
+                        try {
+                            const tx = await claimMPoolCash(position.id);
+                            setMessage("✅ Liquidity removed successfully! Waiting for TX confirmation...");
+                            await tx.wait();
+                            setMessage("✅ Liquidity removed successfully!");
+                            if(address) await fetchUserPositions(address);
+                        } catch (error) {
+                            console.error(error);
+                            setMessage("❌ Error removing liquidity. See console.");
+                        } finally {
+                            setLoadingClaim(false);
+                        }
+                    }}
+                    className="flex-1 px-4 py-2 rounded-md bg-orange-700 hover:bg-orange-600 text-white text-[10px] font-semibold transition-colors"
+                >
+                    Confirm & Remove
+                </button>
+            </div>
+        </motion.div>
+    </div>
+)}
         </div>
+
         
     );
 })}
@@ -1011,7 +1052,7 @@ useEffect(() => {
 <div  className=" w-[80%] mt-[50px] m-auto p-4 bg-black bg-opacity-30 border border-yellow-400/30 rounded-lg mb-6">
           <p className="text-[18px] font-bold mb-[5px]">Important Notice:<br /></p>
 
-         <p> You have 72 hours to decide between making your claim or reinvesting.<br></br>   If you do not make a decision within this time frame, your authorization to reinvest will be applied automatically, contributing to the movement of the asset in the market.</p>
+         <p> You have 48 hours to decide between making your claim or reinvesting.<br></br>   If you do not make a decision within this time frame, your authorization to reinvest will be applied automatically, contributing to the movement of the asset in the market.</p>
          </div>
 </div>   
     <div className="p-4 relative z-20">
@@ -1021,4 +1062,6 @@ useEffect(() => {
  </AnimatePresence>
         </div>
     );
+
+
 }
