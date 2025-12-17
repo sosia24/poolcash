@@ -134,7 +134,6 @@ export default function App() {
 
     const [earns, setEarns] = useState<number>(0);  
 
-    const [clickRemoveLiquidity, setClickRemoveLiquidity] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [sponsor, setSponsor] = useState<string | null>(null);
