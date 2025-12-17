@@ -1813,19 +1813,37 @@ export async function approveUSDCSell(value: string | number, address: string) {
   return tx;
 }
 
-export async function isRegistered(owner: string) {
-  //const provider = new ethers.JsonRpcProvider(RPC_ADDRESS);
-  const provider = await getProvider();
+interface UserData {
+  registered: boolean;
+  // adicione outros campos se existirem, ex: balance: bigint;
+}
 
-  const user = new ethers.Contract(
-    MPOOLCASH_ADDRESS ? MPOOLCASH_ADDRESS : "",
-    mpoolcashAbi,
-    provider
-  );
+export async function isRegistered(owner: string): Promise<boolean> {
+  try {
+    const provider = await getProvider();
 
-  const userData: any = await user.getUser(owner);
+    // Verificação de segurança para o endereço do contrato
+    if (!MPOOLCASH_ADDRESS) {
+      throw new Error("MPOOLCASH_ADDRESS não está definido.");
+    }
 
-  return userData.registered;
+    const userContract = new ethers.Contract(
+      MPOOLCASH_ADDRESS,
+      mpoolcashAbi,
+      provider
+    );
+
+    // 2. Tipamos a chamada do contrato
+    const userData: UserData = await userContract.getUser(owner);
+
+    // Retorna explicitamente o booleano
+    return userData.registered;
+    
+  } catch (error) {
+    console.error("Erro ao verificar registro:", error);
+    // 3. Retorna false (ou lida com o erro) para garantir que a função sempre retorne algo
+    return false;
+  }
 }
 
 export async function registerUser(newUser: string) {
