@@ -175,9 +175,6 @@ const [userTable, setUserTable] = useState<UserTable>({
   const blockStep = 10000;
     // --- Funções de Busca Web3 (useCallback) ---
 
-    async function doRemoveLiquidity() {
-        setClickRemoveLiquidity(!clickRemoveLiquidity);
-    }
 
 
     async function getUserSponsor(){
@@ -783,7 +780,7 @@ useEffect(() => {
                     Liquidity can be removed at any time, and your liquidity will be sent directly to your wallet.
                 </p>
                 <p className="bg-orange-900/20 border-l-2 border-orange-600 p-3 italic">
-                    It's important to remember that MPool is sold through MultpoolDEX, where there is a 
+                    It&apos;s important to remember that MPool is sold through MultpoolDEX, where there is a 
                     <strong> 50% fee in USDC</strong> at the time of sale. You can sell the coin whenever you want, 
                     following the exchange rate you prefer, while adhering to this fee rule.
                 </p>
